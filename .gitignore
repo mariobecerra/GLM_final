@@ -1,0 +1,4 @@
+*.Rhistory
+reports/*.html
+reports/*.pdf
+data/*.zip
