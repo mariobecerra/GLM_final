@@ -1,0 +1,168 @@
+---
+title: "EDA"
+author: "Mario Becerra"
+date: "Diciembre 2017"
+output: html_document
+---
+
+```{r}
+# https://www.kaggle.com/new-york-city/nyc-property-sales
+# http://www1.nyc.gov/site/finance/taxes/property-rolling-sales-data.page
+# https://www.moveline.com/blog/moving-to-new-york-city-know-your-apartment-terminology
+# https://www1.nyc.gov/site/planning/data-maps/open-data/dwn-nynta.page
+# https://data.cityofnewyork.us/Business/Zip-Code-Boundaries/i8iw-xf4u/data
+
+library(tidyverse)
+library(knitr)
+
+theme_set(theme_bw())
+
+nyc_sales <- read_rds("../out/nyc_sales.rds")
+```
+
+```{r}
+dim(nyc_sales)
+
+head(nyc_sales) %>% 
+  kable()
+
+str(nyc_sales)
+
+sapply(nyc_sales, function(x) sum(is.na(x))) %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  kable()
+
+
+qplot(nyc_sales$SALE_PRICE)
+
+qplot(log(nyc_sales$SALE_PRICE))
+
+nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(LAND_SQUARE_FEET))
+
+nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(LAND_SQUARE_FEET))
+
+nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(log(LAND_SQUARE_FEET)))
+
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(LAND_SQUARE_FEET, SALE_PRICE), size = 0.4, alpha = 0.5)
+
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(LAND_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5)
+
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5)
+
+
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(LAND_SQUARE_FEET)), size = 0.4, alpha = 0.5)
+
+
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(YEAR_BUILT, log(SALE_PRICE)), size = 0.4, alpha = 0.5)
+
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  ggplot() +
+  geom_point(aes(YEAR_BUILT, PRICE_PER_SQ_FT), size = 0.4, alpha = 0.5)
+
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  ggplot() +
+  geom_histogram(aes(PRICE_PER_SQ_FT))
+
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  ggplot() +
+  geom_histogram(aes(log(PRICE_PER_SQ_FT)))
+
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  filter(PRICE_PER_SQ_FT > 50) %>% 
+  ggplot() +
+  geom_histogram(aes(x = log(PRICE_PER_SQ_FT), y = ..density..)) +
+  facet_wrap(~Borough)
+
+
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  filter(PRICE_PER_SQ_FT > 50) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = Borough, y = log(PRICE_PER_SQ_FT))) 
+
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = BUILDING_CLASS_CATEGORY), 
+             size = 0.9, alpha = 0.7)
+
+nyc_sales %>% 
+  ggplot() +
+  geom_boxplot(aes(BUILDING_CLASS_CATEGORY, log(SALE_PRICE)))
+
+nyc_sales %>% 
+  ggplot() +
+  geom_boxplot(aes(BUILDING_CLASS_CATEGORY, log(GROSS_SQUARE_FEET)))
+
+```
+
+# Modelos lineales sencillos
+
+```{r}
+mod1 <- lm(log(SALE_PRICE) ~ log(GROSS_SQUARE_FEET) + Borough, 
+           data = nyc_sales)
+
+tibble(
+  yhat = predict(mod1, nyc_sales),
+  obs = log(nyc_sales$SALE_PRICE)) %>% 
+  ggplot() +
+  geom_point(aes(obs, yhat)) +
+  geom_abline(slope = 1)
+
+
+
+mod2 <- lm(log(SALE_PRICE) ~ log(GROSS_SQUARE_FEET) + Borough + BUILDING_CLASS_CATEGORY*log(GROSS_SQUARE_FEET), 
+           data = nyc_sales)
+
+tibble(
+  yhat = predict(mod2, nyc_sales),
+  obs = log(nyc_sales$SALE_PRICE)) %>% 
+  ggplot() +
+  geom_point(aes(obs, yhat)) +
+  geom_abline(slope = 1)
+
+
+
+tibble(
+  yhat = exp(predict(mod2, nyc_sales)),
+  obs = nyc_sales$SALE_PRICE) %>% 
+  ggplot() +
+  geom_point(aes(obs, yhat)) +
+  geom_abline(slope = 1)
+
+
+
+
+aaa <- tibble(
+  yhat = predict(mod2, nyc_sales),
+  obs = log(nyc_sales$SALE_PRICE)) %>% bind_cols(nyc_sales) %>% mutate(res = abs(yhat - obs)) %>% 
+  filter(obs < 11) 
+  
+
+
+```
+
+
+
+
+
