@@ -1,6 +1,7 @@
 # clean data
 library(stringi)
 library(tidyverse)
+if(!require(utilsMBC)) devtools::install_github("mariobecerra/utilsMBC")
 
 # Clean neighborhood data
 
@@ -82,7 +83,8 @@ nyc_sales <- read_csv("../data/nyc-rolling-sales.csv",
          BUILDING_CLASS_CATEGORY != "22 STORE BUILDINGS") %>% 
   ungroup() %>% 
   select(-num) %>% 
-  mutate(zip_code = as.character(ZIP_CODE)) %>% 
+  mutate(zip_code = as.character(ZIP_CODE),
+         YEAR_BUILT = ifelse(YEAR_BUILT == 0, NA, YEAR_BUILT)) %>% 
   left_join(zip_code_neighborhood_borough) %>% 
   select(-ZIP_CODE, 
          -BOROUGH, 
