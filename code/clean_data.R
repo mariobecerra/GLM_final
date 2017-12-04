@@ -55,6 +55,7 @@ nyc_sales <- read_csv("../data/nyc-rolling-sales.csv",
                   col_character()
                 )) %>% 
   make_names() %>%
+  mutate(id = paste(id, BOROUGH, sep = "_")) %>% 
   filter(SALE_PRICE > 7000, 
          !is.na(SALE_PRICE),
          !is.na(LAND_SQUARE_FEET),
