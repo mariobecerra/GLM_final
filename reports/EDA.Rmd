@@ -108,6 +108,10 @@ nyc_sales %>%
 
 nyc_sales %>% 
   ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(LAND_SQUARE_FEET), color = BUILDING_CLASS_CATEGORY), size = 0.9, alpha = 0.5)
+
+nyc_sales %>% 
+  ggplot() +
   geom_boxplot(aes(BUILDING_CLASS_CATEGORY, log(SALE_PRICE)))
 
 nyc_sales %>% 
