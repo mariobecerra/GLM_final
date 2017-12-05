@@ -18,6 +18,8 @@ library(knitr)
 theme_set(theme_bw())
 
 nyc_sales <- read_rds("../out/nyc_sales.rds")
+
+crimes_per_zip_code <- readRDS("../out/crimes_per_zip_code.rds")
 ```
 
 ```{r}
@@ -117,6 +119,36 @@ nyc_sales %>%
 nyc_sales %>% 
   ggplot() +
   geom_boxplot(aes(BUILDING_CLASS_CATEGORY, log(GROSS_SQUARE_FEET)))
+
+nyc_sales %>% 
+  left_join(crimes_per_zip_code) %>% 
+  ggplot() +
+  geom_point(aes(n_crimes, log(SALE_PRICE)))
+
+
+nyc_sales %>% 
+  left_join(crimes_per_zip_code) %>% 
+  ggplot() +
+  geom_point(aes(crimes_pop, log(SALE_PRICE)))
+
+nyc_sales %>% 
+  left_join(crimes_per_zip_code) %>% 
+  ggplot() +
+  geom_point(aes(log(crimes_pop), log(SALE_PRICE)))
+
+nyc_sales %>% 
+  group_by(zip_code) %>% 
+  summarize(mean_log_price = mean(log(SALE_PRICE))) %>% 
+  left_join(crimes_per_zip_code) %>% 
+  ggplot() +
+  geom_point(aes(log(crimes_pop), mean_log_price))
+
+nyc_sales %>% 
+  group_by(zip_code) %>% 
+  summarize(mean_log_price = mean(log(SALE_PRICE))) %>% 
+  left_join(crimes_per_zip_code) %>% 
+  ggplot() +
+  geom_point(aes(n_crimes, mean_log_price))
 
 ```
 
