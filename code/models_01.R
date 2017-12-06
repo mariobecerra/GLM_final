@@ -383,7 +383,7 @@ preds_3 %>%
 
 
 
-## Modelo 4: Jerárquico con zip codes y tipo de edificio como covariable
+## Modelo 4: Jerárquico con vecindarios y tipo de edificio como covariable
 
 string_mod_4 <- "model {
   for(i in 1 : n) {
