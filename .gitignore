@@ -2,3 +2,4 @@
 reports/*.html
 reports/*.pdf
 data/*.zip
+out/models/*
