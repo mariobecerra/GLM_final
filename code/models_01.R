@@ -121,6 +121,17 @@ preds_test_1 <- sim_1$BUGSoutput$summary %>%
          adj = exp(mean)) %>% 
   mutate(res = obs - exp(mean))
 
+# Percentage of observations inside the 95% probability interval
+(preds_1 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_1)
+
+(preds_test_1 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_1)
+
 
 rmse_train_1 <- mean(preds_1$res^2)
 rmse_train_log_1 <- mean((preds_1$mean - log(preds_1$obs))^2)
@@ -154,6 +165,17 @@ string_mod_2 <- "model {
   }
   mu.a ~ dnorm(0, 0.0001)
   tau.a ~ dgamma(0.001, 0.001)
+
+  # Train predictions
+  for(i in 1:n){
+    yf[i] ~ dnorm(mu[i], tau.y) 
+  }
+
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau.y) 
+    mu_test[i] <- alpha[borough_test[i]] + beta*x_test[i]
+  }
 }"
 
 write_file(string_mod_2,
@@ -169,20 +191,84 @@ inits_2 <- function(){
   )
 }
 
-parameters_2 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y")
+parameters_2 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y", "yf", "yf_test")
 
 sim_2 <- jags(nyc_train_list,
               inits_2,
               parameters_2,
               model.file = "model_2.model",
-              n.iter = 1000,
+              n.iter = 10000,
               n.chains = 1,
               n.thin = 1,
-              n.burnin = 300)
+              n.burnin = 2000)
 
-traceplot(sim_2)
+# saveRDS(sim_2, "../out/models/model_02.rds")
+
+
+sim_2 <- read_rds("../out/models/model_02.rds")
+
+#traceplot(sim_2)
 
 # Para 20000 iteraciones tardó 3 minutos
+
+sim_2$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname))
+
+preds_2 <- sim_2$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  select(mean, X2.5., X97.5.) %>% 
+  mutate(obs = nyc_train$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+preds_test_2 <- sim_2$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  select(mean, X2.5., X97.5.) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+
+# Percentage of observations inside the 95% probability interval
+(preds_2 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_2)
+
+(preds_test_2 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_2)
+
+
+rmse_train_2 <- mean(preds_2$res^2)
+rmse_train_log_2 <- mean((preds_2$mean - log(preds_2$obs))^2)
+rmse_test_2 <- mean(preds_test_2$res^2)
+rmse_test_log_2 <- mean((preds_test_2$mean - log(preds_test_2$obs))^2)
+
+preds_2 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot(aes(obs, adj)) +
+  geom_point(aes(color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
+
+preds_test_2 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot(aes(obs, adj)) +
+  geom_point(aes(color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
+
+
+
 
 
 ## Modelo 3: Jerárquico con zip codes
