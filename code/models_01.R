@@ -1,6 +1,8 @@
 library(tidyverse)
 library(R2jags)
 
+options(scipen=999)
+
 building_classification <- read_delim("../info/Building_Classification.psv", delim = "|") %>% 
   rename(Building_Class_Description = Description)
 
@@ -28,7 +30,17 @@ nyc_train_list <- list(
   n_neighborhood = length(unique(nyc_train$Neighborhood)),
   n = nrow(nyc_train),
   n_zip = length(unique(nyc_train$zip_code)),
-  zip_code = as.integer(as.factor(nyc_train$zip_code))
+  zip_code = as.integer(as.factor(nyc_train$zip_code)),
+  y_test = log(nyc_test$SALE_PRICE),
+  x_test = log(nyc_test$GROSS_SQUARE_FEET),
+  building_class_test = as.integer(as.factor(nyc_test$BUILDING_CLASS_CATEGORY)),
+  borough_test = as.integer(as.factor(nyc_test$Borough)),
+  neighborhood_test = as.integer(as.factor(nyc_test$Neighborhood)),
+  n_borough_test = length(unique(nyc_test$Borough)),
+  n_neighborhood_test = length(unique(nyc_test$Neighborhood)),
+  n_test = nrow(nyc_test),
+  n_zip_test = length(unique(nyc_test$zip_code)),
+  zip_code_test = as.integer(as.factor(nyc_test$zip_code))
 )
 
 ## Modelo 1: unidades iguales
@@ -43,6 +55,17 @@ string_mod_1 <- "model {
   alpha ~ dnorm(0, 0.001)
   beta ~ dnorm(0, 0.001)
   tau ~ dgamma(0.001, 0.001)
+
+  # Train predictions
+  for(i in 1:n){
+    yf[i] ~ dnorm(mu[i], tau) 
+  }
+
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau) 
+    mu_test[i] <- alpha + beta*x_test[i]
+  }
 }"
 
 write_file(string_mod_1,
@@ -56,18 +79,65 @@ inits_1 <- function(){
   )
 }
 
-parameters_1 <- c("alpha", "beta", "tau")
+parameters_1 <- c("alpha", "beta", "tau", "yf", "yf_test")
 
-sim_1 <- jags(nyc_train_list,
-              inits_1,
-              parameters_1,
-              model.file = "model_1.model",
-              n.iter = 10000,
-              n.chains = 1,
-              n.burnin = 1000)
+# sim_1 <- jags(nyc_train_list,
+#               inits_1,
+#               parameters_1,
+#               model.file = "model_1.model",
+#               n.iter = 10000,
+#               n.chains = 1,
+#               n.burnin = 1000)
+# 
+# # Con 10000 iteraciones tardó minuto y medio
+# 
+# saveRDS(sim_1, "../out/models/model_01.rds")
 
-# Con 10000 iteraciones tardó minuto y medio
+sim_1 <- read_rds("../out/models/model_01.rds")
 
+sim_1$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname))
+
+preds_1 <- sim_1$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  select(mean, X2.5., X97.5.) %>% 
+  mutate(obs = nyc_train$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+preds_test_1 <- sim_1$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  select(mean, X2.5., X97.5.) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+
+rmse_train_1 <- mean(preds_1$res^2)
+rmse_train_log_1 <- mean((preds_1$mean - log(preds_1$obs))^2)
+rmse_test_1 <- mean(preds_test_1$res^2)
+rmse_test_log_1 <- mean((preds_test_1$mean - log(preds_test_1$obs))^2)
+
+preds_1 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot(aes(obs, adj)) +
+  geom_point(aes(color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
+
+preds_test_1 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot(aes(obs, adj)) +
+  geom_point(aes(color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
 
 
 ## Modelo 2: Jerárquico con boroughs
@@ -131,7 +201,6 @@ string_mod_3 <- "model {
   tau.a ~ dgamma(0.001, 0.001)
 
   # Predictions
-
   for(i in 1:n){
     yf[i] ~ dnorm(mu[i], tau.y) 
   }

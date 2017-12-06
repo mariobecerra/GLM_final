@@ -8,4 +8,15 @@ model {
   alpha ~ dnorm(0, 0.001)
   beta ~ dnorm(0, 0.001)
   tau ~ dgamma(0.001, 0.001)
+
+  # Train predictions
+  for(i in 1:n){
+    yf[i] ~ dnorm(mu[i], tau) 
+  }
+
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau) 
+    mu_test[i] <- alpha + beta*x_test[i]
+  }
 }
