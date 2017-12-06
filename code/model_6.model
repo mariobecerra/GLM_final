@@ -19,9 +19,18 @@ model {
   mu.b3 ~ dnorm(0, 0.0001)
   tau.b3 ~ dgamma(0.001, 0.001)
 
-# Predictions
-
+# Train predictions
   for(i in 1:n){
     yf[i] ~ dnorm(mu[i], tau.y) 
   }
+
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau.y) 
+    mu_test[i] <- alpha[zip_code_test[i]] + 
+                  beta_1[zip_code_test[i]]*x_test[i] + 
+                  beta_2[zip_code_test[i]]*building_class_test[i] + 
+                  beta_3[zip_code_test[i]]*building_class_test[i]*x_test[i]
+  }
+
 }

@@ -659,7 +659,7 @@ preds_5 %>%
 
 
 
-## Modelo 6: Jerárquico con zip codes y tipo de edificio como covariable
+## Modelo 6: Jerárquico con zip codes, tipo de edificio como covariable y pendientes e interceptos distintos
 
 string_mod_6 <- "model {
   for(i in 1:n) {
@@ -682,11 +682,20 @@ string_mod_6 <- "model {
   mu.b3 ~ dnorm(0, 0.0001)
   tau.b3 ~ dgamma(0.001, 0.001)
 
-# Predictions
-
+# Train predictions
   for(i in 1:n){
     yf[i] ~ dnorm(mu[i], tau.y) 
   }
+
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau.y) 
+    mu_test[i] <- alpha[zip_code_test[i]] + 
+                  beta_1[zip_code_test[i]]*x_test[i] + 
+                  beta_2[zip_code_test[i]]*building_class_test[i] + 
+                  beta_3[zip_code_test[i]]*building_class_test[i]*x_test[i]
+  }
+
 }"
 
 write_file(string_mod_6,
@@ -723,18 +732,24 @@ parameters_6 <- c("mu.a",
                   "mu.b3",
                   "tau.b3",
                   "tau.y", 
-                  "yf")
+                  "yf",
+                  "yf_test")
 
 sim_6 <- jags(nyc_train_list,
               inits_6,
               parameters_6,
               model.file = "model_6.model",
-              n.iter = 1000,
+              n.iter = 10000,
               n.chains = 1,
               n.thin = 1,
-              n.burnin = 300)
+              n.burnin = 1000)
 
-traceplot(sim_6)
+# saveRDS(sim_6, "../out/models/model_06.rds")
+
+
+sim_6 <- read_rds("../out/models/model_06.rds")
+
+#traceplot(sim_6)
 
 # Con 1000 iteraciones tardó 91 segundos
 
@@ -742,6 +757,28 @@ sim_6$BUGSoutput$summary %>%
   as.data.frame() %>% 
   rownames_to_column() %>% 
   filter(!grepl("yf", rowname))
+
+
+preds_6 <- sim_6$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  select(mean, X2.5., X97.5.) %>% 
+  mutate(obs = nyc_train$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+preds_test_6 <- sim_6$BUGSoutput$summary %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  select(mean, X2.5., X97.5.) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
 
 preds_6 <- sim_6$BUGSoutput$summary %>% 
   as.data.frame() %>% 
