@@ -1,0 +1,16 @@
+*.bak
+*.log
+*.lot
+*.synctex.gz
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.run.xml
+*.toc
+*blx.bib
+*.sublime-workspace
+*.pdf
+
