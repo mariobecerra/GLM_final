@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{blindtext}
+\usepackage{graphicx}
+\usepackage[pass]{geometry}
+\usepackage[backend=bibtex, maxbibnames=99]{biblatex}
+\usepackage{parskip}
+\usepackage[spanish]{babel}
+\usepackage{csquotes}
+
+
+\addbibresource{bibliography.bib} %Imports bibliography file
+
+\begin{document}
+
+\newgeometry{bottom=2.5cm, left=2.1cm,right=2.1cm,top=2.5cm}
+
+\title{Regresión Avanzada \\ Proyecto Final}
+
+\author{Mario~Becerra Contreras \\ Edgar~López}
+
+\date{Otoño 2017}
+
+
+\maketitle
+
+\input{sections/01_introduccion}
+
+\input{sections/02_marco_teorico}
+
+\input{sections/03_resultados}
+
+\input{sections/04_conclusiones}
+
+\printbibliography
+\nocite{*}
+
+
+\end{document}
