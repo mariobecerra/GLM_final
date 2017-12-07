@@ -257,7 +257,7 @@ inits_1 <- function(){
 }
 
 parameters_1 <- c("alpha", "beta", "tau", "yf", "yf_test")
-
+# 
 # sim_1 <- jags(nyc_sales_list,
 #               inits_1,
 #               parameters_1,
@@ -270,14 +270,15 @@ parameters_1 <- c("alpha", "beta", "tau", "yf", "yf_test")
 # 
 # saveRDS(sim_1, "../out/models/model_01.rds")
 
-sim_1 <- read_rds("../out/models/model_01.rds")
+summary_mod_1 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary
+gc()
 
-sim_1$BUGSoutput$summary %>% 
+summary_mod_1 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   filter(!grepl("yf", rowname))
 
-preds_1 <- sim_1$BUGSoutput$summary %>% 
+preds_1 <- summary_mod_1 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   slice(grep("yf", rowname)) %>% 
@@ -288,7 +289,7 @@ preds_1 <- sim_1$BUGSoutput$summary %>%
          adj = exp(mean)) %>% 
   mutate(res = obs - exp(mean))
 
-preds_test_1 <- sim_1$BUGSoutput$summary %>% 
+preds_test_1 <- summary_mod_1 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   slice(grep("test", rowname)) %>% 
@@ -370,30 +371,31 @@ inits_2 <- function(){
 
 parameters_2 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y", "yf", "yf_test")
 
-sim_2 <- jags(nyc_sales_list,
-              inits_2,
-              parameters_2,
-              model.file = "model_2.model",
-              n.iter = 10000,
-              n.chains = 1,
-              n.thin = 1,
-              n.burnin = 2000)
-
+# sim_2 <- jags(nyc_sales_list,
+#               inits_2,
+#               parameters_2,
+#               model.file = "model_2.model",
+#               n.iter = 10000,
+#               n.chains = 1,
+#               n.thin = 2,
+#               n.burnin = 2000)
+# 
 # saveRDS(sim_2, "../out/models/model_02.rds")
 
 
-sim_2 <- read_rds("../out/models/model_02.rds")
+summary_mod_2 <- read_rds("../out/models/model_02.rds")$BUGSoutput$summary
+gc()
 
 #traceplot(sim_2)
 
 # Para 20000 iteraciones tardó 3 minutos
 
-sim_2$BUGSoutput$summary %>% 
+summary_mod_2 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   filter(!grepl("yf", rowname))
 
-preds_2 <- sim_2$BUGSoutput$summary %>% 
+preds_2 <- summary_mod_2 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   slice(grep("yf", rowname)) %>% 
@@ -404,7 +406,7 @@ preds_2 <- sim_2$BUGSoutput$summary %>%
          adj = exp(mean)) %>% 
   mutate(res = obs - exp(mean))
 
-preds_test_2 <- sim_2$BUGSoutput$summary %>% 
+preds_test_2 <- summary_mod_2 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   slice(grep("test", rowname)) %>% 
@@ -484,29 +486,42 @@ inits_3 <- function(){
 
 parameters_3 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y", "yf")
 
-sim_3 <- jags(nyc_sales_list,
-              inits_3,
-              parameters_3,
-              model.file = "model_3.model",
-              n.iter = 1000,
-              n.chains = 1,
-              n.thin = 1,
-              n.burnin = 300)
-
-traceplot(sim_3)
-
+# sim_3 <- jags(nyc_sales_list,
+#               inits_3,
+#               parameters_3,
+#               model.file = "model_3.model",
+#               n.iter = 10000,
+#               n.chains = 1,
+#               n.thin = 2,
+#               n.burnin = 2000)
+# saveRDS(sim_3, "../out/models/model_03.rds")
 # Con 1000 iteraciones tardó 15 segundos
 
+summary_mod_3 <- read_rds("../out/models/model_03.rds")$BUGSoutput$summary
+gc()
 
-preds_3 <- sim_3$BUGSoutput$summary %>% 
+
+preds_3 <- summary_mod_3 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
   set_names(make.names(names(.))) %>% 
   select(mean, X2.5., X97.5.) %>% 
   mutate(obs = nyc_train$SALE_PRICE,
          adj = exp(mean)) %>% 
   mutate(res = obs - exp(mean))
+
+preds_test_3 <- summary_mod_3 %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  select(mean, X2.5., X97.5.) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
 
 preds_3 %>% 
   mutate(ix = 1:nrow(.)) %>% 
@@ -559,279 +574,279 @@ preds_3 %>%
   View
 
 
-
-## Modelo 4: Jerárquico con vecindarios y tipo de edificio como covariable
-
-string_mod_4 <- "model {
-  for(i in 1 : n) {
-    y[i] ~ dnorm(mu[i], tau.y) 
-    mu[i] <- alpha[neighborhood[i]] + beta_1*x[i] + beta_2*building_class[i] + beta_3*building_class[i]*x[i]
-  }
-  beta_1 ~ dnorm(0, 0.0001)
-  beta_2 ~ dnorm(0, 0.0001)
-  beta_3 ~ dnorm(0, 0.0001)
-  tau.y ~ dgamma(0.001, 0.001)
-  for(j in 1:n_neighborhood){
-    alpha[j] ~ dnorm(mu.a, tau.a)
-  }
-  mu.a ~ dnorm(0, 0.0001)
-  tau.a ~ dgamma(0.001, 0.001)
-
-  # Predictions
-
-  for(i in 1:n){
-    yf[i] ~ dnorm(mu[i], tau.y) 
-  }
-}"
-
-write_file(string_mod_4,
-           path = "model_4.model")
-
-inits_4 <- function(){
-  list(
-    alpha = rep(0, nyc_sales_list$n_neighborhood), 
-    beta_1 = 0,
-    beta_2 = 0,
-    beta_3 = 0,
-    tau.y = 1,
-    mu.a = 0,
-    tau.a = 1
-  )
-}
-
-parameters_4 <- c("mu.a", "tau.a", "alpha", "beta_1", "beta_2", "beta_3", "tau.y", "yf")
-
-sim_4 <- jags(nyc_sales_list,
-              inits_4,
-              parameters_4,
-              model.file = "model_4.model",
-              n.iter = 1000,
-              n.chains = 1,
-              n.thin = 1,
-              n.burnin = 300)
-
-traceplot(sim_4)
-
-# Con 1000 iteraciones tardó 15 segundos
-
-sim_4$BUGSoutput$summary %>% 
-  as.data.frame() %>% 
-  rownames_to_column() %>% 
-  filter(!grepl("yf", rowname))
-
-preds_4 <- sim_4$BUGSoutput$summary %>% 
-  as.data.frame() %>% 
-  rownames_to_column() %>% 
-  slice(grep("yf", rowname)) %>% 
-  set_names(make.names(names(.))) %>% 
-  select(mean, X2.5., X97.5.) %>% 
-  mutate(obs = nyc_train$SALE_PRICE,
-         adj = exp(mean)) %>% 
-  mutate(res = obs - exp(mean))
-
-(preds_4 %>% 
-    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
-    .$in_interval %>% 
-    sum())/nrow(preds_4)
-
-preds_4 %>% 
-  mutate(ix = 1:nrow(.)) %>% 
-  ggplot() +
-  geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
-
-preds_4 %>% 
-  sample_n(nrow(.)) %>% 
-  mutate(ix = 1:nrow(.)) %>% 
-  ggplot() +
-  geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
-
-
-preds_4 %>% 
-  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
-  ggplot() +
-  geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-
-preds_4 %>% 
-  sample_n(5000) %>% 
-  ggplot(aes(log(obs), mean)) +
-  geom_point(alpha = 0.6) +
-  geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-preds_4 %>% 
-  sample_n(5000) %>% 
-  ggplot(aes(obs, adj)) +
-  geom_point(alpha = 0.6) +
-  geom_errorbar(aes(ymin = exp(X2.5.), ymax = exp(X97.5.)), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-
-preds_4 %>% 
-  mutate(Borough = nyc_train$Borough) %>% 
-  ggplot() +
-  geom_point(aes(log(obs), mean, color = Borough), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-preds_4 %>% 
-  mutate(year = nyc_train$year_cat) %>% 
-  ggplot() +
-  geom_point(aes(log(obs), mean, color = year), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-preds_4 %>% 
-  mutate(Building_Class_Description = nyc_train$Building_Class_Description) %>% 
-  ggplot() +
-  geom_point(aes(log(obs), mean, color = Building_Class_Description), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-preds_4 %>% 
-  mutate(Building_Class_Description = nyc_train$Building_Class_Description) %>% 
-  mutate(Class2 = substr(Building_Class_Description, 1, 1)) %>% 
-  ggplot() +
-  geom_point(aes(log(obs), mean, color = Class2), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-
-preds_4 %>% 
-  mutate(Address = nyc_train$ADDRESS) %>% 
-  filter(log(obs) < 12, mean > 12) %>% 
-  View
-
-
+# 
+# ## Modelo 4: Jerárquico con vecindarios y tipo de edificio como covariable
+# 
+# string_mod_4 <- "model {
+#   for(i in 1 : n) {
+#     y[i] ~ dnorm(mu[i], tau.y) 
+#     mu[i] <- alpha[neighborhood[i]] + beta_1*x[i] + beta_2*building_class[i] + beta_3*building_class[i]*x[i]
+#   }
+#   beta_1 ~ dnorm(0, 0.0001)
+#   beta_2 ~ dnorm(0, 0.0001)
+#   beta_3 ~ dnorm(0, 0.0001)
+#   tau.y ~ dgamma(0.001, 0.001)
+#   for(j in 1:n_neighborhood){
+#     alpha[j] ~ dnorm(mu.a, tau.a)
+#   }
+#   mu.a ~ dnorm(0, 0.0001)
+#   tau.a ~ dgamma(0.001, 0.001)
+# 
+#   # Predictions
+# 
+#   for(i in 1:n){
+#     yf[i] ~ dnorm(mu[i], tau.y) 
+#   }
+# }"
+# 
+# write_file(string_mod_4,
+#            path = "model_4.model")
+# 
+# inits_4 <- function(){
+#   list(
+#     alpha = rep(0, nyc_sales_list$n_neighborhood), 
+#     beta_1 = 0,
+#     beta_2 = 0,
+#     beta_3 = 0,
+#     tau.y = 1,
+#     mu.a = 0,
+#     tau.a = 1
+#   )
+# }
+# 
+# parameters_4 <- c("mu.a", "tau.a", "alpha", "beta_1", "beta_2", "beta_3", "tau.y", "yf")
+# 
+# sim_4 <- jags(nyc_sales_list,
+#               inits_4,
+#               parameters_4,
+#               model.file = "model_4.model",
+#               n.iter = 1000,
+#               n.chains = 1,
+#               n.thin = 1,
+#               n.burnin = 300)
+# 
+# traceplot(sim_4)
+# 
+# # Con 1000 iteraciones tardó 15 segundos
+# 
+# sim_4$BUGSoutput$summary %>% 
+#   as.data.frame() %>% 
+#   rownames_to_column() %>% 
+#   filter(!grepl("yf", rowname))
+# 
+# preds_4 <- sim_4$BUGSoutput$summary %>% 
+#   as.data.frame() %>% 
+#   rownames_to_column() %>% 
+#   slice(grep("yf", rowname)) %>% 
+#   set_names(make.names(names(.))) %>% 
+#   select(mean, X2.5., X97.5.) %>% 
+#   mutate(obs = nyc_train$SALE_PRICE,
+#          adj = exp(mean)) %>% 
+#   mutate(res = obs - exp(mean))
+# 
+# (preds_4 %>% 
+#     mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+#     .$in_interval %>% 
+#     sum())/nrow(preds_4)
+# 
+# preds_4 %>% 
+#   mutate(ix = 1:nrow(.)) %>% 
+#   ggplot() +
+#   geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
+# 
+# preds_4 %>% 
+#   sample_n(nrow(.)) %>% 
+#   mutate(ix = 1:nrow(.)) %>% 
+#   ggplot() +
+#   geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
+# 
+# 
+# preds_4 %>% 
+#   mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+#   ggplot() +
+#   geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# 
+# preds_4 %>% 
+#   sample_n(5000) %>% 
+#   ggplot(aes(log(obs), mean)) +
+#   geom_point(alpha = 0.6) +
+#   geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# preds_4 %>% 
+#   sample_n(5000) %>% 
+#   ggplot(aes(obs, adj)) +
+#   geom_point(alpha = 0.6) +
+#   geom_errorbar(aes(ymin = exp(X2.5.), ymax = exp(X97.5.)), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# 
+# preds_4 %>% 
+#   mutate(Borough = nyc_train$Borough) %>% 
+#   ggplot() +
+#   geom_point(aes(log(obs), mean, color = Borough), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# preds_4 %>% 
+#   mutate(year = nyc_train$year_cat) %>% 
+#   ggplot() +
+#   geom_point(aes(log(obs), mean, color = year), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# preds_4 %>% 
+#   mutate(Building_Class_Description = nyc_train$Building_Class_Description) %>% 
+#   ggplot() +
+#   geom_point(aes(log(obs), mean, color = Building_Class_Description), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# preds_4 %>% 
+#   mutate(Building_Class_Description = nyc_train$Building_Class_Description) %>% 
+#   mutate(Class2 = substr(Building_Class_Description, 1, 1)) %>% 
+#   ggplot() +
+#   geom_point(aes(log(obs), mean, color = Class2), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# 
+# preds_4 %>% 
+#   mutate(Address = nyc_train$ADDRESS) %>% 
+#   filter(log(obs) < 12, mean > 12) %>% 
+#   View
 
 
-## Modelo 5: Jerárquico con zip codes y tipo de edificio como covariable
 
-string_mod_5 <- "model {
-  for(i in 1 : n) {
-    y[i] ~ dnorm(mu[i], tau.y) 
-    mu[i] <- alpha[zip_code[i]] + beta_1*x[i] + beta_2*building_class[i] + beta_3*building_class[i]*x[i]
-  }
-  beta_1 ~ dnorm(0, 0.0001)
-  beta_2 ~ dnorm(0, 0.0001)
-  beta_3 ~ dnorm(0, 0.0001)
-  tau.y ~ dgamma(0.001, 0.001)
-  for(j in 1:n_zip){
-    alpha[j] ~ dnorm(mu.a, tau.a)
-  }
-  mu.a ~ dnorm(0, 0.0001)
-  tau.a ~ dgamma(0.001, 0.001)
-
-  # Predictions
-
-  for(i in 1:n){
-    yf[i] ~ dnorm(mu[i], tau.y) 
-  }
-}"
-
-write_file(string_mod_5,
-           path = "model_5.model")
-
-inits_5 <- function(){
-  list(
-    alpha = rep(0, nyc_sales_list$n_zip), 
-    beta_1 = 0,
-    beta_2 = 0,
-    beta_3 = 0,
-    tau.y = 1,
-    mu.a = 0,
-    tau.a = 1
-  )
-}
-
-parameters_5 <- c("mu.a", "tau.a", "alpha", "beta_1", "beta_2", "beta_3", "tau.y", "yf")
-
-sim_5 <- jags(nyc_sales_list,
-              inits_5,
-              parameters_5,
-              model.file = "model_5.model",
-              n.iter = 1000,
-              n.chains = 1,
-              n.thin = 1,
-              n.burnin = 300)
-
-traceplot(sim_5)
-
-# Con 1000 iteraciones tardó 91 segundos
-
-sim_5$BUGSoutput$summary %>% 
-  as.data.frame() %>% 
-  rownames_to_column() %>% 
-  filter(!grepl("yf", rowname))
-
-preds_5 <- sim_5$BUGSoutput$summary %>% 
-  as.data.frame() %>% 
-  rownames_to_column() %>% 
-  slice(grep("yf", rowname)) %>% 
-  set_names(make.names(names(.))) %>% 
-  select(mean, X2.5., X97.5.) %>% 
-  mutate(obs = nyc_train$SALE_PRICE,
-         adj = exp(mean)) %>% 
-  mutate(res = obs - exp(mean))
-
-rmse_train_5 <- mean(preds_5$res^2)
-rmse_train_log_5 <- mean((preds_5$mean - log(preds_5$obs))^2)
-
-
-(preds_5 %>% 
-    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
-    .$in_interval %>% 
-    sum())/nrow(preds_5)
-
-preds_5 %>% 
-  mutate(ix = 1:nrow(.)) %>% 
-  ggplot() +
-  geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
-
-preds_5 %>% 
-  sample_n(nrow(.)) %>% 
-  mutate(ix = 1:nrow(.)) %>% 
-  ggplot() +
-  geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
-
-preds_5 %>% 
-  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
-  sample_n(nrow(.)) %>% 
-  mutate(ix = 1:nrow(.)) %>% 
-  ggplot() +
-  geom_point(aes(ix, res, color = BUILDING_CLASS_CATEGORY), size = 0.8, alpha = 0.6)
-
-
-preds_5 %>% 
-  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
-  ggplot() +
-  geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-
-preds_5 %>% 
-  sample_n(6000) %>% 
-  ggplot(aes(log(obs), mean)) +
-  geom_point(alpha = 0.4, size = 0.4) +
-  geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.4) +
-  geom_abline(slope = 1)
-
-preds_5 %>% 
-  sample_n(5000) %>% 
-  ggplot(aes(obs, adj)) +
-  geom_point(alpha = 0.4) +
-  geom_errorbar(aes(ymin = exp(X2.5.), ymax = exp(X97.5.)), alpha = 0.4) +
-  geom_abline(slope = 1)
-
-preds_5 %>% 
-  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
-  ggplot(aes(obs, adj)) +
-  geom_point(aes(color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
-  geom_abline(slope = 1)
-
-
-preds_5 %>% 
-  mutate(Borough = nyc_train$Borough) %>% 
-  ggplot() +
-  geom_point(aes(log(obs), mean, color = Borough), alpha = 0.6) +
-  geom_abline(slope = 1)
+# 
+# ## Modelo 5: Jerárquico con zip codes y tipo de edificio como covariable
+# 
+# string_mod_5 <- "model {
+#   for(i in 1 : n) {
+#     y[i] ~ dnorm(mu[i], tau.y) 
+#     mu[i] <- alpha[zip_code[i]] + beta_1*x[i] + beta_2*building_class[i] + beta_3*building_class[i]*x[i]
+#   }
+#   beta_1 ~ dnorm(0, 0.0001)
+#   beta_2 ~ dnorm(0, 0.0001)
+#   beta_3 ~ dnorm(0, 0.0001)
+#   tau.y ~ dgamma(0.001, 0.001)
+#   for(j in 1:n_zip){
+#     alpha[j] ~ dnorm(mu.a, tau.a)
+#   }
+#   mu.a ~ dnorm(0, 0.0001)
+#   tau.a ~ dgamma(0.001, 0.001)
+# 
+#   # Predictions
+# 
+#   for(i in 1:n){
+#     yf[i] ~ dnorm(mu[i], tau.y) 
+#   }
+# }"
+# 
+# write_file(string_mod_5,
+#            path = "model_5.model")
+# 
+# inits_5 <- function(){
+#   list(
+#     alpha = rep(0, nyc_sales_list$n_zip), 
+#     beta_1 = 0,
+#     beta_2 = 0,
+#     beta_3 = 0,
+#     tau.y = 1,
+#     mu.a = 0,
+#     tau.a = 1
+#   )
+# }
+# 
+# parameters_5 <- c("mu.a", "tau.a", "alpha", "beta_1", "beta_2", "beta_3", "tau.y", "yf")
+# 
+# sim_5 <- jags(nyc_sales_list,
+#               inits_5,
+#               parameters_5,
+#               model.file = "model_5.model",
+#               n.iter = 1000,
+#               n.chains = 1,
+#               n.thin = 1,
+#               n.burnin = 300)
+# 
+# traceplot(sim_5)
+# 
+# # Con 1000 iteraciones tardó 91 segundos
+# 
+# sim_5$BUGSoutput$summary %>% 
+#   as.data.frame() %>% 
+#   rownames_to_column() %>% 
+#   filter(!grepl("yf", rowname))
+# 
+# preds_5 <- sim_5$BUGSoutput$summary %>% 
+#   as.data.frame() %>% 
+#   rownames_to_column() %>% 
+#   slice(grep("yf", rowname)) %>% 
+#   set_names(make.names(names(.))) %>% 
+#   select(mean, X2.5., X97.5.) %>% 
+#   mutate(obs = nyc_train$SALE_PRICE,
+#          adj = exp(mean)) %>% 
+#   mutate(res = obs - exp(mean))
+# 
+# rmse_train_5 <- mean(preds_5$res^2)
+# rmse_train_log_5 <- mean((preds_5$mean - log(preds_5$obs))^2)
+# 
+# 
+# (preds_5 %>% 
+#     mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+#     .$in_interval %>% 
+#     sum())/nrow(preds_5)
+# 
+# preds_5 %>% 
+#   mutate(ix = 1:nrow(.)) %>% 
+#   ggplot() +
+#   geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
+# 
+# preds_5 %>% 
+#   sample_n(nrow(.)) %>% 
+#   mutate(ix = 1:nrow(.)) %>% 
+#   ggplot() +
+#   geom_point(aes(ix, res), size = 0.7, alpha = 0.6)
+# 
+# preds_5 %>% 
+#   mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+#   sample_n(nrow(.)) %>% 
+#   mutate(ix = 1:nrow(.)) %>% 
+#   ggplot() +
+#   geom_point(aes(ix, res, color = BUILDING_CLASS_CATEGORY), size = 0.8, alpha = 0.6)
+# 
+# 
+# preds_5 %>% 
+#   mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+#   ggplot() +
+#   geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# 
+# preds_5 %>% 
+#   sample_n(6000) %>% 
+#   ggplot(aes(log(obs), mean)) +
+#   geom_point(alpha = 0.4, size = 0.4) +
+#   geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.4) +
+#   geom_abline(slope = 1)
+# 
+# preds_5 %>% 
+#   sample_n(5000) %>% 
+#   ggplot(aes(obs, adj)) +
+#   geom_point(alpha = 0.4) +
+#   geom_errorbar(aes(ymin = exp(X2.5.), ymax = exp(X97.5.)), alpha = 0.4) +
+#   geom_abline(slope = 1)
+# 
+# preds_5 %>% 
+#   mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+#   ggplot(aes(obs, adj)) +
+#   geom_point(aes(color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+#   geom_abline(slope = 1)
+# 
+# 
+# preds_5 %>% 
+#   mutate(Borough = nyc_train$Borough) %>% 
+#   ggplot() +
+#   geom_point(aes(log(obs), mean, color = Borough), alpha = 0.6) +
+#   geom_abline(slope = 1)
 
 
 
@@ -841,7 +856,10 @@ preds_5 %>%
 string_mod_6 <- "model {
   for(i in 1:n) {
     y[i] ~ dnorm(mu[i], tau.y) 
-    mu[i] <- alpha[zip_code[i]] + beta_1[zip_code[i]]*x[i] + beta_2[zip_code[i]]*building_class[i] + beta_3[zip_code[i]]*building_class[i]*x[i]
+    mu[i] <-  alpha[zip_code[i]] + 
+              beta_1[zip_code[i]]*x[i] + 
+              beta_2[zip_code[i]]*building_class[i] + 
+              beta_3[zip_code[i]]*building_class[i]*x[i]
   }
   tau.y ~ dgamma(0.001, 0.001)
   for(j in 1:n_zip){
@@ -918,24 +936,25 @@ parameters_6 <- c("mu.a",
 #               model.file = "model_6.model",
 #               n.iter = 10000,
 #               n.chains = 1,
-#               n.thin = 1,
-#               n.burnin = 1000)
+#               n.thin = 2,
+#               n.burnin = 2000)
 #
 # saveRDS(sim_6, "../out/models/model_06.rds")
 
 
-sim_6 <- read_rds("../out/models/model_06.rds")
+summary_mod_6 <- read_rds("../out/models/model_06.rds")$BUGSoutput$summary
+gc()
 
 #traceplot(sim_6)
 
 # Con 1000 iteraciones tardó 91 segundos
 
-sim_6$BUGSoutput$summary %>%
+summary_mod_6 %>%
   as.data.frame() %>%
   rownames_to_column() %>%
   filter(!grepl("yf", rowname))
 
-preds_6 <- sim_6$BUGSoutput$summary %>% 
+preds_6 <- summary_mod_6 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   slice(grep("yf", rowname)) %>% 
@@ -945,7 +964,7 @@ preds_6 <- sim_6$BUGSoutput$summary %>%
          adj = exp(mean)) %>% 
   mutate(res = obs - exp(mean))
 
-preds_test_6 <- sim_6$BUGSoutput$summary %>% 
+preds_test_6 <- summary_mod_6 %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   slice(grep("test", rowname)) %>% 
@@ -967,9 +986,14 @@ rmse_test_log_6 <- mean((preds_test_6$mean - log(preds_test_6$obs))^2)
     .$in_interval %>% 
     sum())/nrow(preds_6)
 
+(preds_6 %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_6)
+
 
 (preds_test_6 %>% 
-    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
     .$in_interval %>% 
     sum())/nrow(preds_test_6)
 
@@ -1132,8 +1156,8 @@ parameters_7 <- c("mu.a",
 #               model.file = "model_7.model",
 #               n.iter = 10000,
 #               n.chains = 1,
-#               n.thin = 1,
-#               n.burnin = 1000)
+#               n.thin = 2,
+#               n.burnin = 2000)
 # 
 # saveRDS(sim_7, "../out/models/model_07.rds")
 
@@ -1178,9 +1202,20 @@ rmse_test_log_7 <- mean((preds_test_7$mean - log(preds_test_7$obs))^2)
     .$in_interval %>% 
     sum())/nrow(preds_7)
 
+(preds_7 %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_7)
+
 
 (preds_test_7 %>% 
     mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_7)
+
+
+(preds_test_7 %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
     .$in_interval %>% 
     sum())/nrow(preds_test_7)
 
@@ -1334,48 +1369,48 @@ nyc_train %>%
 
 
 
-
-### frecuentistas
-
-mod2 <- lm(log(SALE_PRICE) ~ log(GROSS_SQUARE_FEET) + Borough + BUILDING_CLASS_CATEGORY*log(GROSS_SQUARE_FEET), 
-           data = nyc_train)
-
-summary(mod2)
-
-tibble(
-  yhat = predict(mod2, nyc_train),
-  obs = log(nyc_train$SALE_PRICE)) %>% 
-  ggplot() +
-  geom_point(aes(obs, yhat)) +
-  geom_abline(slope = 1)
-
-tibble(
-  log_res = predict(mod2, nyc_train) - log(nyc_train$SALE_PRICE),
-  BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
-  sample_n(nrow(.)) %>% 
-  mutate(ix = 1:nrow(.)) %>% 
-  ggplot() +
-  geom_point(aes(ix, log_res, color = BUILDING_CLASS_CATEGORY), alpha = 0.7)
-
-
-tibble(
-  res = exp(predict(mod2, nyc_train)) - nyc_train$SALE_PRICE,
-  BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
-  sample_n(nrow(.)) %>% 
-  mutate(ix = 1:nrow(.)) %>% 
-  ggplot() +
-  geom_point(aes(ix, res, color = BUILDING_CLASS_CATEGORY), alpha = 0.7)
-
-tibble(
-  estimate = exp(predict(mod2, nyc_train)),
-  price = nyc_train$SALE_PRICE,
-  zip_code = nyc_train$zip_code,
-  GROSS_SQUARE_FEET = nyc_train$GROSS_SQUARE_FEET,
-  res = exp(predict(mod2, nyc_train)) - nyc_train$SALE_PRICE,
-  Address = nyc_train$ADDRESS,
-  BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
-  sample_n(nrow(.)) %>% 
-  mutate(ix = 1:nrow(.)) %>% filter(res > 1.5e06 | res < -1.5e06) %>% 
-  View
-
-
+# 
+# ### frecuentistas
+# 
+# mod2 <- lm(log(SALE_PRICE) ~ log(GROSS_SQUARE_FEET) + Borough + BUILDING_CLASS_CATEGORY*log(GROSS_SQUARE_FEET), 
+#            data = nyc_train)
+# 
+# summary(mod2)
+# 
+# tibble(
+#   yhat = predict(mod2, nyc_train),
+#   obs = log(nyc_train$SALE_PRICE)) %>% 
+#   ggplot() +
+#   geom_point(aes(obs, yhat)) +
+#   geom_abline(slope = 1)
+# 
+# tibble(
+#   log_res = predict(mod2, nyc_train) - log(nyc_train$SALE_PRICE),
+#   BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+#   sample_n(nrow(.)) %>% 
+#   mutate(ix = 1:nrow(.)) %>% 
+#   ggplot() +
+#   geom_point(aes(ix, log_res, color = BUILDING_CLASS_CATEGORY), alpha = 0.7)
+# 
+# 
+# tibble(
+#   res = exp(predict(mod2, nyc_train)) - nyc_train$SALE_PRICE,
+#   BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+#   sample_n(nrow(.)) %>% 
+#   mutate(ix = 1:nrow(.)) %>% 
+#   ggplot() +
+#   geom_point(aes(ix, res, color = BUILDING_CLASS_CATEGORY), alpha = 0.7)
+# 
+# tibble(
+#   estimate = exp(predict(mod2, nyc_train)),
+#   price = nyc_train$SALE_PRICE,
+#   zip_code = nyc_train$zip_code,
+#   GROSS_SQUARE_FEET = nyc_train$GROSS_SQUARE_FEET,
+#   res = exp(predict(mod2, nyc_train)) - nyc_train$SALE_PRICE,
+#   Address = nyc_train$ADDRESS,
+#   BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+#   sample_n(nrow(.)) %>% 
+#   mutate(ix = 1:nrow(.)) %>% filter(res > 1.5e06 | res < -1.5e06) %>% 
+#   View
+# 
+# 
