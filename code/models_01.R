@@ -19,6 +19,8 @@ nyc_sales <- read_rds("../out/nyc_sales.rds") %>%
     zip_code_int = as.integer(as.factor(zip_code))  
   )
 
+file_list <- list.files("../out/models")
+
 set.seed(124362)
 
 nyc_train <- nyc_sales %>% 
@@ -270,8 +272,13 @@ parameters_1 <- c("alpha", "beta", "tau", "yf", "yf_test")
 # 
 # saveRDS(sim_1, "../out/models/model_01.rds")
 
-summary_mod_1 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary
-gc()
+if("summary_mod_1.rds" %in% file_list){
+  summary_mod_1 <- read_rds("../out/models/summary_mod_1.rds")
+} else {
+  summary_mod_1 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_1, "../out/models/summary_mod_1.rds")
+  gc()
+}
 
 summary_mod_1 %>% 
   as.data.frame() %>% 
@@ -383,8 +390,13 @@ parameters_2 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y", "yf", "yf_test")
 # saveRDS(sim_2, "../out/models/model_02.rds")
 
 
-summary_mod_2 <- read_rds("../out/models/model_02.rds")$BUGSoutput$summary
-gc()
+if("summary_mod_2.rds" %in% file_list){
+  summary_mod_2 <- read_rds("../out/models/summary_mod_2.rds")
+} else {
+  summary_mod_2 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_2, "../out/models/summary_mod_2.rds")
+  gc()
+}
 
 #traceplot(sim_2)
 
@@ -497,8 +509,13 @@ parameters_3 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y", "yf")
 # saveRDS(sim_3, "../out/models/model_03.rds")
 # Con 1000 iteraciones tardó 15 segundos
 
-summary_mod_3 <- read_rds("../out/models/model_03.rds")$BUGSoutput$summary
-gc()
+if("summary_mod_3.rds" %in% file_list){
+  summary_mod_3 <- read_rds("../out/models/summary_mod_3.rds")
+} else {
+  summary_mod_3 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_3, "../out/models/summary_mod_3.rds")
+  gc()
+}
 
 
 preds_3 <- summary_mod_3 %>% 
@@ -713,9 +730,9 @@ preds_3 %>%
 #   mutate(Address = nyc_train$ADDRESS) %>% 
 #   filter(log(obs) < 12, mean > 12) %>% 
 #   View
-
-
-
+# 
+# 
+# 
 # 
 # ## Modelo 5: Jerárquico con zip codes y tipo de edificio como covariable
 # 
@@ -942,8 +959,13 @@ parameters_6 <- c("mu.a",
 # saveRDS(sim_6, "../out/models/model_06.rds")
 
 
-summary_mod_6 <- read_rds("../out/models/model_06.rds")$BUGSoutput$summary
-gc()
+if("summary_mod_6.rds" %in% file_list){
+  summary_mod_6 <- read_rds("../out/models/summary_mod_6.rds")
+} else {
+  summary_mod_6 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_6, "../out/models/summary_mod_6.rds")
+  gc()
+}
 
 #traceplot(sim_6)
 
@@ -1164,8 +1186,13 @@ parameters_7 <- c("mu.a",
 
 #sim_7 <- read_rds("../out/models/model_07.rds")
 
-summary_mod_7 <- read_rds("../out/models/model_07.rds")$BUGSoutput$summary
-gc()
+if("summary_mod_7.rds" %in% file_list){
+  summary_mod_7 <- read_rds("../out/models/summary_mod_7.rds")
+} else {
+  summary_mod_7 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_7, "../out/models/summary_mod_7.rds")
+  gc()
+}
 
 summary_mod_7 %>% 
   as.data.frame() %>% 
@@ -1470,8 +1497,13 @@ parameters_8 <- c("mu.a",
 
 #sim_8 <- read_rds("../out/models/model_08.rds")
 
-summary_mod_8 <- read_rds("../out/models/model_08.rds")$BUGSoutput$summary
-gc()
+if("summary_mod_8.rds" %in% file_list){
+  summary_mod_8 <- read_rds("../out/models/summary_mod_8.rds")
+} else {
+  summary_mod_8 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_8, "../out/models/summary_mod_8.rds")
+  gc()
+}
 
 summary_mod_8 %>% 
   as.data.frame() %>% 
@@ -1562,7 +1594,7 @@ preds_test_8 %>%
 
 
 
-# 
+
 # ### frecuentistas
 # 
 # mod2 <- lm(log(SALE_PRICE) ~ log(GROSS_SQUARE_FEET) + Borough + BUILDING_CLASS_CATEGORY*log(GROSS_SQUARE_FEET), 
