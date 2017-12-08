@@ -481,6 +481,12 @@ string_mod_3 <- "model {
   for(i in 1:n){
     yf[i] ~ dnorm(mu[i], tau.y) 
   }
+
+  # Predictions test
+  for(i in 1:n){
+    yf_test[i] ~ dnorm(mu_test[i], tau.y) 
+    mu_test[i] <- alpha[neighborhood_test[i]] + beta*x_test[i]
+  }
 }"
 
 write_file(string_mod_3,
