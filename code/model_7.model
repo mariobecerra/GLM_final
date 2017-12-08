@@ -1,0 +1,39 @@
+model {
+  for(i in 1:n) {
+    y[i] ~ dnorm(mu[i], tau.y) 
+    mu[i] <-  alpha[neighborhood[i]] + 
+              beta_1[neighborhood[i]]*x[i] + 
+              beta_2[neighborhood[i]]*building_class[i] + 
+              beta_3[neighborhood[i]]*building_class[i]*x[i]
+  }
+  tau.y ~ dgamma(0.001, 0.001)
+  for(j in 1:n_neighborhood){
+    alpha[j] ~ dnorm(mu.a, tau.a)
+    beta_1[j] ~ dnorm(mu.b1, tau.b1)
+    beta_2[j] ~ dnorm(mu.b2, tau.b2)
+    beta_3[j] ~ dnorm(mu.b3, tau.b3)
+  }
+  mu.a ~ dnorm(0, 0.0001)
+  tau.a ~ dgamma(0.001, 0.001)
+  mu.b1 ~ dnorm(0, 0.0001)
+  tau.b1 ~ dgamma(0.001, 0.001)
+  mu.b2 ~ dnorm(0, 0.0001)
+  tau.b2 ~ dgamma(0.001, 0.001)
+  mu.b3 ~ dnorm(0, 0.0001)
+  tau.b3 ~ dgamma(0.001, 0.001)
+  
+  # Train predictions
+  for(i in 1:n){
+    yf[i] ~ dnorm(mu[i], tau.y) 
+  }
+  
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau.y) 
+    mu_test[i] <- alpha[neighborhood_test[i]] + 
+      beta_1[neighborhood_test[i]]*x_test[i] + 
+      beta_2[neighborhood_test[i]]*building_class_test[i] + 
+      beta_3[neighborhood_test[i]]*building_class_test[i]*x_test[i]
+  }
+
+}
