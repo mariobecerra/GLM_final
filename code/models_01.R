@@ -318,10 +318,10 @@ preds_test_1 <- summary_mod_1 %>%
     sum())/nrow(preds_test_1)
 
 
-rmse_train_1 <- mean(preds_1$res^2)
-rmse_train_log_1 <- mean((preds_1$mean - log(preds_1$obs))^2)
-rmse_test_1 <- mean(preds_test_1$res^2)
-rmse_test_log_1 <- mean((preds_test_1$mean - log(preds_test_1$obs))^2)
+(rmse_train_1 <- mean(preds_1$res^2))
+(rmse_train_log_1 <- mean((preds_1$mean - log(preds_1$obs))^2))
+(rmse_train_1 <- mean(preds_test_1$res^2))
+(rmse_train_log_1 <- mean((preds_test_1$mean - log(preds_test_1$obs))^2))
 
 preds_1 %>% 
   mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
@@ -393,7 +393,7 @@ parameters_2 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y", "yf", "yf_test")
 if("summary_mod_2.rds" %in% file_list){
   summary_mod_2 <- read_rds("../out/models/summary_mod_2.rds")
 } else {
-  summary_mod_2 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  summary_mod_2 <- read_rds("../out/models/model_02.rds")$BUGSoutput$summary  
   saveRDS(summary_mod_2, "../out/models/summary_mod_2.rds")
   gc()
 }
@@ -441,10 +441,10 @@ preds_test_2 <- summary_mod_2 %>%
     sum())/nrow(preds_test_2)
 
 
-rmse_train_2 <- mean(preds_2$res^2)
-rmse_train_log_2 <- mean((preds_2$mean - log(preds_2$obs))^2)
-rmse_test_2 <- mean(preds_test_2$res^2)
-rmse_test_log_2 <- mean((preds_test_2$mean - log(preds_test_2$obs))^2)
+(rmse_train_2 <- mean(preds_2$res^2))
+(rmse_train_log_2 <- mean((preds_2$mean - log(preds_2$obs))^2))
+(rmse_train_2 <- mean(preds_test_2$res^2))
+(rmse_train_log_2 <- mean((preds_test_2$mean - log(preds_test_2$obs))^2))
 
 preds_2 %>% 
   mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
@@ -512,7 +512,7 @@ parameters_3 <- c("mu.a", "tau.a", "alpha", "beta", "tau.y", "yf")
 if("summary_mod_3.rds" %in% file_list){
   summary_mod_3 <- read_rds("../out/models/summary_mod_3.rds")
 } else {
-  summary_mod_3 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  summary_mod_3 <- read_rds("../out/models/model_03.rds")$BUGSoutput$summary  
   saveRDS(summary_mod_3, "../out/models/summary_mod_3.rds")
   gc()
 }
@@ -803,8 +803,8 @@ preds_3 %>%
 #          adj = exp(mean)) %>% 
 #   mutate(res = obs - exp(mean))
 # 
-# rmse_train_5 <- mean(preds_5$res^2)
-# rmse_train_log_5 <- mean((preds_5$mean - log(preds_5$obs))^2)
+# (rmse_train_5 <- mean(preds_5$res^2))
+# (rmse_train_log_5 <- mean((preds_5$mean - log(preds_5$obs))^2))
 # 
 # 
 # (preds_5 %>% 
@@ -962,7 +962,7 @@ parameters_6 <- c("mu.a",
 if("summary_mod_6.rds" %in% file_list){
   summary_mod_6 <- read_rds("../out/models/summary_mod_6.rds")
 } else {
-  summary_mod_6 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  summary_mod_6 <- read_rds("../out/models/model_06.rds")$BUGSoutput$summary  
   saveRDS(summary_mod_6, "../out/models/summary_mod_6.rds")
   gc()
 }
@@ -998,10 +998,10 @@ preds_test_6 <- summary_mod_6 %>%
 
 
 
-rmse_train_6 <- mean(preds_6$res^2)
-rmse_train_log_6 <- mean((preds_6$mean - log(preds_6$obs))^2)
-rmse_test_6 <- mean(preds_test_6$res^2)
-rmse_test_log_6 <- mean((preds_test_6$mean - log(preds_test_6$obs))^2)
+(rmse_train_6 <- mean(preds_6$res^2))
+(rmse_train_log_6 <- mean((preds_6$mean - log(preds_6$obs))^2))
+(rmse_train_6 <- mean(preds_test_6$res^2))
+(rmse_train_log_6 <- mean((preds_test_6$mean - log(preds_test_6$obs))^2))
 
 (preds_6 %>% 
     mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
@@ -1189,7 +1189,7 @@ parameters_7 <- c("mu.a",
 if("summary_mod_7.rds" %in% file_list){
   summary_mod_7 <- read_rds("../out/models/summary_mod_7.rds")
 } else {
-  summary_mod_7 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  summary_mod_7 <- read_rds("../out/models/model_07.rds")$BUGSoutput$summary  
   saveRDS(summary_mod_7, "../out/models/summary_mod_7.rds")
   gc()
 }
@@ -1219,10 +1219,10 @@ preds_test_7 <- summary_mod_7 %>%
   mutate(res = obs - exp(mean))
 
 
-rmse_train_7 <- mean(preds_7$res^2)
-rmse_train_log_7 <- mean((preds_7$mean - log(preds_7$obs))^2)
-rmse_test_7 <- mean(preds_test_7$res^2)
-rmse_test_log_7 <- mean((preds_test_7$mean - log(preds_test_7$obs))^2)
+(rmse_train_7 <- mean(preds_7$res^2))
+(rmse_train_log_7 <- mean((preds_7$mean - log(preds_7$obs))^2))
+(rmse_train_7 <- mean(preds_test_7$res^2))
+(rmse_train_log_7 <- mean((preds_test_7$mean - log(preds_test_7$obs))^2))
 
 (preds_7 %>% 
     mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
@@ -1500,7 +1500,7 @@ parameters_8 <- c("mu.a",
 if("summary_mod_8.rds" %in% file_list){
   summary_mod_8 <- read_rds("../out/models/summary_mod_8.rds")
 } else {
-  summary_mod_8 <- read_rds("../out/models/model_01.rds")$BUGSoutput$summary  
+  summary_mod_8 <- read_rds("../out/models/model_08.rds")$BUGSoutput$summary  
   saveRDS(summary_mod_8, "../out/models/summary_mod_8.rds")
   gc()
 }
@@ -1530,10 +1530,10 @@ preds_test_8 <- summary_mod_8 %>%
   mutate(res = obs - exp(mean))
 
 
-rmse_train_8 <- mean(preds_8$res^2)
-rmse_train_log_8 <- mean((preds_8$mean - log(preds_8$obs))^2)
-rmse_test_8 <- mean(preds_test_8$res^2)
-rmse_test_log_8 <- mean((preds_test_8$mean - log(preds_test_8$obs))^2)
+(rmse_train_8 <- mean(preds_8$res^2))
+(rmse_train_log_8 <- mean((preds_8$mean - log(preds_8$obs))^2))
+(rmse_train_8 <- mean(preds_test_8$res^2))
+(rmse_train_log_8 <- mean((preds_test_8$mean - log(preds_test_8$obs))^2))
 
 (preds_8 %>% 
     mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
@@ -1572,7 +1572,206 @@ preds_test_8 %>%
 
 
 
+## Modelo 9: Jerárquico con zip codes, tipo de edificio como covariable y pendientes, interceptos y varianzas diferentes
 
+string_mod_9 <- "model {
+for(i in 1:n) {
+y[i] ~ dnorm(mu[i], tau.y[zip_code[i]]) 
+mu[i] <-  alpha[zip_code[i]] + 
+beta_1[zip_code[i]]*x[i] + 
+beta_2[zip_code[i]]*building_class[i] + 
+beta_3[zip_code[i]]*building_class[i]*x[i]
+}
+for(j in 1:n_zip){
+tau.y[j] ~ dgamma(tau.y.h1, tau.y.h2)
+alpha[j] ~ dnorm(mu.a, tau.a)
+beta_1[j] ~ dnorm(mu.b1, tau.b1)
+beta_2[j] ~ dnorm(mu.b2, tau.b2)
+beta_3[j] ~ dnorm(mu.b3, tau.b3)
+}
+tau.y.h1 ~ dgamma(0.001, 0.001)
+tau.y.h2 ~ dgamma(0.001, 0.001)
+mu.a ~ dnorm(0, 0.0001)
+tau.a ~ dgamma(0.001, 0.001)
+mu.b1 ~ dnorm(0, 0.0001)
+tau.b1 ~ dgamma(0.001, 0.001)
+mu.b2 ~ dnorm(0, 0.0001)
+tau.b2 ~ dgamma(0.001, 0.001)
+mu.b3 ~ dnorm(0, 0.0001)
+tau.b3 ~ dgamma(0.001, 0.001)
+
+# Train predictions
+for(i in 1:n){
+yf[i] ~ dnorm(mu[i], tau.y[zip_code[i]]) 
+}
+
+# Test predictions
+for(i in 1:n_test){
+yf_test[i] ~ dnorm(mu_test[i], tau.y[zip_code_test[i]])
+mu_test[i] <- alpha[zip_code_test[i]] + 
+beta_1[zip_code_test[i]]*x_test[i] + 
+beta_2[zip_code_test[i]]*building_class_test[i] + 
+beta_3[zip_code_test[i]]*building_class_test[i]*x_test[i]
+}
+}"
+
+write_file(string_mod_9,
+           path = "model_9.model")
+
+inits_9 <- function(){
+  list(
+    alpha = rep(0, nyc_sales_list$n_zip), 
+    beta_1 = rep(0, nyc_sales_list$n_zip), 
+    beta_2 = rep(0, nyc_sales_list$n_zip), 
+    beta_3 = rep(0, nyc_sales_list$n_zip), 
+    tau.y = rep(1, nyc_sales_list$n_zip), 
+    tau.y.h1 = 1,
+    tau.y.h2 = 1,
+    mu.a = 0,
+    tau.a = 1,
+    mu.b1 = 0,
+    tau.b1 = 1,
+    mu.b2 = 0,
+    tau.b2 = 1,
+    mu.b3 = 0,
+    tau.b3 = 1
+  )
+}
+
+parameters_9 <- c("mu.a", 
+                  "tau.a", 
+                  "alpha", 
+                  "beta_1", 
+                  "beta_2", 
+                  "beta_3", 
+                  "mu.b1",
+                  "tau.b1",
+                  "mu.b2",
+                  "tau.b2",
+                  "mu.b3",
+                  "tau.b3",
+                  "tau.y", 
+                  "tau.y.h1",
+                  "tau.y.h2",
+                  "yf",
+                  "yf_test")
+
+# sim_9 <- jags(nyc_sales_list,
+#               inits_9,
+#               parameters_9,
+#               model.file = "model_9.model",
+#               n.iter = 10000,
+#               n.chains = 1,
+#               n.thin = 2,
+#               n.burnin = 2000)
+# 
+# saveRDS(sim_9, "../out/models/model_09.rds")
+
+
+#sim_9 <- read_rds("../out/models/model_09.rds")
+
+if("summary_mod_9.rds" %in% file_list){
+  summary_mod_9 <- read_rds("../out/models/summary_mod_9.rds")
+} else {
+  summary_mod_9 <- read_rds("../out/models/model_09.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_9, "../out/models/summary_mod_9.rds")
+  gc()
+}
+
+summary_mod_9 %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname))
+
+preds_9 <- summary_mod_9 %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_train$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+preds_test_9 <- summary_mod_9 %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+
+(rmse_train_9 <- mean(preds_9$res^2))
+(rmse_train_log_9 <- mean((preds_9$mean - log(preds_9$obs))^2))
+(rmse_train_9 <- mean(preds_test_9$res^2))
+(rmse_train_log_9 <- mean((preds_test_9$mean - log(preds_test_9$obs))^2))
+
+(preds_9 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_9)
+
+(preds_9 %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_9)
+
+(preds_test_9 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_9)
+
+(preds_test_9 %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_9)
+
+preds_9 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
+
+
+preds_test_9 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
+
+preds_9 %>% 
+  mutate(zip_code = nyc_train$zip_code,
+         BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~zip_code)
+
+preds_test_9 %>% 
+  mutate(zip_code = nyc_test$zip_code,
+         BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~zip_code)
+
+preds_9 %>% 
+  mutate(Neighborhood = paste(nyc_train$Borough, nyc_train$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
+
+preds_test_9 %>% 
+  mutate(Neighborhood = paste(nyc_test$Borough, nyc_test$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
 
 
 
