@@ -3679,6 +3679,333 @@ preds_test_22 %>%
 
 
 
+
+
+#### Modelo 23: Igual que el 23 pero solo con tamaño como covariable
+
+
+string_mod_23 <- "model {
+for(i in 1:n) {
+y[i] ~ dnorm(mu[i], tau.y[zip_code[i]]) 
+mu[i] <-  alpha[zip_code[i]] + 
+          beta_1[zip_code[i]]*x[i] 
+}
+
+for(j in 1:n_zip){
+alpha[j] ~ dnorm(mu.a[neighborhood[j]], tau.a[neighborhood[j]])
+beta_1[j] ~ dnorm(mu.b1[neighborhood[j]], tau.b1[neighborhood[j]])
+# beta_2[j] ~ dnorm(mu.b2[neighborhood[j]], tau.b2[neighborhood[j]])
+# beta_3[j] ~ dnorm(mu.b3[neighborhood[j]], tau.b3[neighborhood[j]])
+tau.y[j] ~ dgamma(alpha.y[borough[j]], beta.y[borough[j]])
+}
+
+for(j in 1:n_neighborhood){
+mu.a[j] ~ dnorm(mu.a.1[borough[j]], tau.a.1[borough[j]])
+tau.a[j] ~ dexp(lambda.a.1[borough[j]])
+mu.b1[j] ~ dnorm(mu.b1.1[borough[j]], tau.b1.1[borough[j]])
+tau.b1[j] ~ dexp(lambda.b1.1[borough[j]])
+# mu.b2[j] ~ dnorm(mu.b2.1[borough[j]], tau.b2.1[borough[j]])
+# tau.b2[j] ~ dexp(lambda.b2.1[borough[j]])
+# mu.b3[j] ~ dnorm(mu.b3.1[borough[j]], tau.b3.1[borough[j]])
+# tau.b3[j] ~ dexp(lambda.b3.1[borough[j]])
+alpha.y[j] ~ dexp(lambda.alpha.y[borough[j]])
+beta.y[j] ~ dexp(lambda.beta.y[borough[j]])
+}
+
+for(j in 1:n_borough){
+mu.a.1[j] ~ dnorm(mu.a.1.0, tau.a.1.0)
+tau.a.1[j] ~ dexp(lambda.a.tau.0)
+lambda.a.1[j] ~ dexp(lambda.a.0)
+
+mu.b1.1[j] ~ dnorm(mu.b1.1.0, tau.b1.1.0)
+tau.b1.1[j] ~ dexp(lambda.b1.tau.0)
+lambda.b1.1[j] ~ dexp(lambda.b1.0)
+
+# mu.b2.1[j] ~ dnorm(mu.b2.1.0, tau.b2.1.0)
+# tau.b2.1[j] ~ dexp(lambda.b2.tau.0)
+# lambda.b2.1[j] ~ dexp(lambda.b2.0)
+
+# mu.b3.1[j] ~ dnorm(mu.b3.1.0, tau.b3.1.0)
+# tau.b3.1[j] ~ dexp(lambda.b3.tau.0)
+# lambda.b3.1[j] ~ dexp(lambda.b3.0)
+
+lambda.alpha.y[j] ~ dexp(lambda.lambda.alpha.y)
+lambda.beta.y[j] ~ dexp(lambda.lambda.beta.y)
+}
+
+mu.a.1.0 ~ dnorm(0, 0.0001)
+tau.a.1.0 ~ dgamma(0.01, 0.01)
+lambda.a.tau.0 ~ dgamma(0.01, 0.01)
+lambda.a.0 ~ dgamma(0.01, 0.01)
+mu.b1.1.0 ~ dnorm(0, 0.0001)
+tau.b1.1.0 ~ dgamma(0.01, 0.01)
+lambda.b1.tau.0 ~ dgamma(0.01, 0.01)
+lambda.b1.0 ~ dgamma(0.01, 0.01)
+# mu.b2.1.0 ~ dnorm(0, 0.0001)
+# tau.b2.1.0 ~ dgamma(0.01, 0.01)
+# lambda.b2.tau.0 ~ dgamma(0.01, 0.01)
+# lambda.b2.0 ~ dgamma(0.01, 0.01)
+# mu.b3.1.0 ~ dnorm(0, 0.0001)
+# tau.b3.1.0 ~ dgamma(0.01, 0.01)
+# lambda.b3.tau.0 ~ dgamma(0.01, 0.01)
+# lambda.b3.0 ~ dgamma(0.01, 0.01)
+lambda.lambda.alpha.y ~ dgamma(0.01, 0.01)
+lambda.lambda.beta.y ~ dgamma(0.01, 0.01)
+
+# Train predictions
+for(i in 1:n){
+yf[i] ~ dnorm(mu[i], tau.y[zip_code[i]]) 
+}
+
+# Test predictions
+for(i in 1:n_test){
+yf_test[i] ~ dnorm(mu_test[i], tau.y[zip_code_test[i]]) 
+mu_test[i] <- alpha[zip_code_test[i]] + 
+beta_1[zip_code_test[i]]*x_test[i] 
+# beta_2[zip_code_test[i]]*building_class_test[i] + 
+# beta_3[zip_code_test[i]]*building_class_test[i]*x_test[i]
+}
+
+}"
+
+write_file(string_mod_23,
+           path = "model_23.model")
+
+inits_23 <- function(){
+  list(
+    tau.y = rep(1, nyc_sales_list$n_zip),
+    alpha = rep(0, nyc_sales_list$n_zip), 
+    beta_1 = rep(0, nyc_sales_list$n_zip), 
+    beta_2 = rep(0, nyc_sales_list$n_zip), 
+    beta_3 = rep(0, nyc_sales_list$n_zip), 
+    mu.a = rep(0, nyc_sales_list$n_neighborhood),
+    mu.b1 = rep(0, nyc_sales_list$n_neighborhood),
+    mu.b2 = rep(0, nyc_sales_list$n_neighborhood),
+    mu.b3 = rep(0, nyc_sales_list$n_neighborhood),
+    tau.a = rep(1, nyc_sales_list$n_neighborhood),
+    tau.b1 = rep(1, nyc_sales_list$n_neighborhood),
+    tau.b2 = rep(1, nyc_sales_list$n_neighborhood),
+    tau.b3 = rep(1, nyc_sales_list$n_neighborhood),
+    alpha.y = rep(1, nyc_sales_list$n_neighborhood),
+    beta.y = rep(1, nyc_sales_list$n_neighborhood),
+    
+    mu.a.1 = rep(0, nyc_sales_list$n_borough),
+    tau.a.1 = rep(1, nyc_sales_list$n_borough),
+    lambda.a.1 = rep(1, nyc_sales_list$n_borough),
+    mu.b1.1 = rep(0, nyc_sales_list$n_borough),
+    tau.b1.1 = rep(1, nyc_sales_list$n_borough),
+    lambda.b1.1 = rep(1, nyc_sales_list$n_borough),
+    mu.b2.1 = rep(0, nyc_sales_list$n_borough),
+    tau.b2.1 = rep(1, nyc_sales_list$n_borough),
+    lambda.b2.1 = rep(1, nyc_sales_list$n_borough),
+    mu.b3.1 = rep(0, nyc_sales_list$n_borough),
+    tau.b3.1 = rep(1, nyc_sales_list$n_borough),
+    lambda.b3.1 = rep(1, nyc_sales_list$n_borough),
+    lambda.alpha.y = rep(1, nyc_sales_list$n_borough),
+    lambda.beta.y = rep(1, nyc_sales_list$n_borough),
+    
+    mu.a.1.0 = 0,
+    tau.a.1.0 = 1,
+    lambda.a.tau.0 = 1,
+    lambda.a.0 = 1,
+    mu.b1.1.0 = 0,
+    tau.b1.1.0 = 1,
+    lambda.b1.tau.0 = 1,
+    lambda.b1.0 = 1,
+    mu.b2.1.0 = 0,
+    tau.b2.1.0 = 1,
+    lambda.b2.tau.0 = 1,
+    lambda.b2.0 = 1,
+    mu.b3.1.0 = 0,
+    tau.b3.1.0 = 1,
+    lambda.b3.tau.0 = 1,
+    lambda.b3.0 = 1,
+    lambda.lambda.alpha.y = 1,
+    lambda.lambda.beta.y = 1
+  )
+}
+
+parameters_23 <- c("tau.y",
+                   "alpha",
+                   "beta_1",
+                   # "beta_2",
+                   # "beta_3",
+                   "mu.a",
+                   "mu.b1",
+                   # "mu.b2",
+                   # "mu.b3",
+                   "tau.a",
+                   "tau.b1",
+                   # "tau.b2",
+                   # "tau.b3",
+                   "alpha.y",
+                   "beta.y",
+                   
+                   "mu.a.1",
+                   "tau.a.1",
+                   "lambda.a.1",
+                   "mu.b1.1",
+                   "tau.b1.1",
+                   "lambda.b1.1",
+                   # "mu.b2.1",
+                   # "tau.b2.1",
+                   # "lambda.b2.1",
+                   # "mu.b3.1",
+                   # "tau.b3.1",
+                   # "lambda.b3.1",
+                   "lambda.alpha.y",
+                   "lambda.beta.y",
+                   
+                   "mu.a.1.0",
+                   "tau.a.1.0",
+                   "lambda.a.tau.0",
+                   "lambda.a.0",
+                   "mu.b1.1.0",
+                   "tau.b1.1.0",
+                   "lambda.b1.tau.0",
+                   "lambda.b1.0",
+                   # "mu.b2.1.0",
+                   # "tau.b2.1.0",
+                   # "lambda.b2.tau.0",
+                   # "lambda.b2.0",
+                   # "mu.b3.1.0",
+                   # "tau.b3.1.0",
+                   # "lambda.b3.tau.0",
+                   # "lambda.b3.0",
+                   "lambda.lambda.alpha.y",
+                   "lambda.lambda.beta.y",
+                   
+                   "yf",
+                   "yf_test"
+                   
+)
+
+# sim_23 <- jags(nyc_sales_list,
+#                inits_23,
+#                parameters_23,
+#                model.file = "model_23.model",
+#                n.iter = 10000,
+#                n.chains = 1,
+#                n.thin = 2,
+#                n.burnin = 2000)
+# 
+# saveRDS(sim_23, "../out/models/model_23.rds")
+# summary_mod_23 <- sim_23$BUGSoutput$summary  
+# saveRDS(summary_mod_23, "../out/models/summary_mod_23.rds")
+
+
+if("summary_mod_23.rds" %in% file_list){
+  summary_mod_23 <- read_rds("../out/models/summary_mod_23.rds")
+} else {
+  summary_mod_23 <- read_rds("../out/models/model_23.rds")$BUGSoutput$summary  
+  saveRDS(summary_mod_23, "../out/models/summary_mod_23.rds")
+  gc()
+}
+
+summary_mod_23 %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  as_tibble()
+
+preds_23 <- summary_mod_23 %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_train$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+preds_test_23 <- summary_mod_23 %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+
+(rmse_train_23 <- sqrt(mean(preds_23$res^2)))
+(rmse_train_log_23 <- sqrt(mean((preds_23$mean - log(preds_23$obs))^2)))
+(rmse_test_23 <- sqrt(mean(preds_test_23$res^2)))
+(rmse_test_log_23 <- sqrt(mean((preds_test_23$mean - log(preds_test_23$obs))^2)))
+
+(preds_23 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_23)
+
+(preds_23 %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_23)
+
+(preds_test_23 %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_23)
+
+(preds_test_23 %>% 
+    mutate(in_interval = (log( obs) >= X25. & log( obs) <= X75.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_23)
+
+
+
+preds_23 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
+
+
+preds_test_23 %>% 
+  mutate(BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), mean, color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1)
+
+
+preds_test_23 %>%
+  ggplot(aes(log(obs), mean)) +
+  geom_point(alpha = 0.4, size = 0.4) +
+  geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.4) +
+  geom_abline(slope = 1)
+
+preds_23 %>% 
+  mutate(Neighborhood = paste(nyc_train$Borough, nyc_train$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
+
+preds_23 %>% 
+  mutate(Neighborhood = paste(nyc_train$Borough, nyc_train$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot(aes(x = log(obs), y = X50., color = BUILDING_CLASS_CATEGORY)) +
+  geom_point(alpha = 0.6) + geom_errorbar(aes(ymin = X2.5., ymax = X97.5.)) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
+
+preds_test_23 %>% 
+  mutate(Neighborhood = paste(nyc_test$Borough, nyc_test$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
+
+
+
+
+
+
+
+
 rmse_train_1 
 rmse_test_1 
 
@@ -3720,6 +4047,9 @@ rmse_test_21
 
 rmse_train_22 
 rmse_test_22
+
+rmse_train_23
+rmse_test_23
 
 
 
