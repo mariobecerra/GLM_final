@@ -111,33 +111,38 @@ nyc_test <- nyc_sales %>%
 
 # Algunas gráficas
 
-```{r}
+```{r, out.width="150%", out.height="150%"}
 
 nyc_sales %>% 
   mutate(Neighborhood2 = paste(Borough, Neighborhood)) %>% 
   ggplot() +
-  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
-  facet_wrap(~Neighborhood2, scales = 'free')
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = BUILDING_CLASS_CATEGORY), 
+             alpha = 0.6, size = 0.7) +
+  facet_wrap(~Neighborhood2, scales = 'free') + theme(legend.position="bottom")
 
 nyc_sales %>% 
   ggplot() +
-  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
-  facet_wrap(~Borough, scales = 'free')
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = BUILDING_CLASS_CATEGORY), 
+             alpha = 0.6, size = 0.7) +
+  facet_wrap(~Borough, scales = 'free') + theme(legend.position="bottom")
 
 nyc_sales %>% 
   ggplot() +
-  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
-  facet_grid(BUILDING_CLASS_CATEGORY~Borough, scales = 'free')
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = BUILDING_CLASS_CATEGORY), 
+             alpha = 0.6, size = 0.7) +
+  facet_grid(BUILDING_CLASS_CATEGORY~Borough, scales = 'free') + theme(legend.position="bottom")
 
 
 nyc_train %>% 
   ggplot() +
-  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), alpha = 0.6) +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), 
+             alpha = 0.6, size = 0.7) +
   facet_wrap(~Neighborhood, scales = 'free')
 
 nyc_test %>% 
   ggplot() +
-  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), alpha = 0.6) +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), 
+             alpha = 0.6, size = 0.7) +
   facet_wrap(~Neighborhood, scales = 'free')
 
 
@@ -153,7 +158,8 @@ nyc_train %>%
       mutate(set = 'test')
   ) %>% 
   ggplot() +
-  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), alpha = 0.6) +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), 
+             alpha = 0.6, size = 0.7) +
   facet_grid(set~Neighborhood, scales = 'free')
 
 nyc_train %>% 
@@ -167,7 +173,8 @@ nyc_train %>%
       mutate(set = 'test')
   ) %>% 
   ggplot() +
-  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), alpha = 0.6) +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), 
+             alpha = 0.6, size = 0.7) +
   facet_grid(set~Borough, scales = 'free')
 
 ```
