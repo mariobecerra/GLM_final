@@ -3652,6 +3652,29 @@ preds_test_22 %>%
   geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.4) +
   geom_abline(slope = 1)
 
+preds_22 %>% 
+  mutate(Neighborhood = paste(nyc_train$Borough, nyc_train$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
+
+preds_22 %>% 
+  mutate(Neighborhood = paste(nyc_train$Borough, nyc_train$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_train$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot(aes(x = log(obs), y = X50., color = BUILDING_CLASS_CATEGORY)) +
+  geom_point(alpha = 0.6) + geom_errorbar(aes(ymin = X2.5., ymax = X97.5.)) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
+
+preds_test_22 %>% 
+  mutate(Neighborhood = paste(nyc_test$Borough, nyc_test$Neighborhood),
+         BUILDING_CLASS_CATEGORY = nyc_test$BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(obs), (mean), color = BUILDING_CLASS_CATEGORY), alpha = 0.6) +
+  geom_abline(slope = 1) +
+  facet_wrap(~Neighborhood)
 
 
 
