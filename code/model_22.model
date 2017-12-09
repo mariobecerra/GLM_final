@@ -1,0 +1,85 @@
+model {
+for(i in 1:n) {
+  y[i] ~ dnorm(mu[i], tau.y[zip_code[i]]) 
+  mu[i] <-  alpha[zip_code[i]] + 
+            beta_1[zip_code[i]]*x[i] + 
+            beta_2[zip_code[i]]*building_class[i] + 
+            beta_3[zip_code[i]]*building_class[i]*x[i]
+}
+
+for(j in 1:n_zip){
+  alpha[j] ~ dnorm(mu.a[neighborhood[j]], tau.a[neighborhood[j]])
+  beta_1[j] ~ dnorm(mu.b1[neighborhood[j]], tau.b1[neighborhood[j]])
+  beta_2[j] ~ dnorm(mu.b2[neighborhood[j]], tau.b2[neighborhood[j]])
+  beta_3[j] ~ dnorm(mu.b3[neighborhood[j]], tau.b3[neighborhood[j]])
+  tau.y[j] ~ dgamma(alpha.y[borough[j]], beta.y[borough[j]])
+}
+
+for(j in 1:n_neighborhood){
+  mu.a[j] ~ dnorm(mu.a.1[borough[j]], tau.a.1[borough[j]])
+  tau.a[j] ~ dexp(lambda.a.1[borough[j]])
+  mu.b1[j] ~ dnorm(mu.b1.1[borough[j]], tau.b1.1[borough[j]])
+  tau.b1[j] ~ dexp(lambda.b1.1[borough[j]])
+  mu.b2[j] ~ dnorm(mu.b2.1[borough[j]], tau.b2.1[borough[j]])
+  tau.b2[j] ~ dexp(lambda.b2.1[borough[j]])
+  mu.b3[j] ~ dnorm(mu.b3.1[borough[j]], tau.b3.1[borough[j]])
+  tau.b3[j] ~ dexp(lambda.b3.1[borough[j]])
+  alpha.y[j] ~ dexp(lambda.alpha.y[borough[j]])
+  beta.y[j] ~ dexp(lambda.beta.y[borough[j]])
+}
+
+for(j in 1:n_borough){
+  mu.a.1[j] ~ dnorm(mu.a.1.0, tau.a.1.0)
+  tau.a.1[j] ~ dexp(lambda.a.tau.0)
+  lambda.a.1[j] ~ dexp(lambda.a.0)
+  
+  mu.b1.1[j] ~ dnorm(mu.b1.1.0, tau.b1.1.0)
+  tau.b1.1[j] ~ dexp(lambda.b1.tau.0)
+  lambda.b1.1[j] ~ dexp(lambda.b1.0)
+  
+  mu.b2.1[j] ~ dnorm(mu.b2.1.0, tau.b2.1.0)
+  tau.b2.1[j] ~ dexp(lambda.b2.tau.0)
+  lambda.b2.1[j] ~ dexp(lambda.b2.0)
+  
+  mu.b3.1[j] ~ dnorm(mu.b3.1.0, tau.b3.1.0)
+  tau.b3.1[j] ~ dexp(lambda.b3.tau.0)
+  lambda.b3.1[j] ~ dexp(lambda.b3.0)
+
+  lambda.alpha.y[j] ~ dexp(lambda.lambda.alpha.y)
+  lambda.beta.y[j] ~ dexp(lambda.lambda.beta.y)
+}
+
+mu.a.1.0 ~ dnorm(0, 0.0001)
+tau.a.1.0 ~ dgamma(0.01, 0.01)
+lambda.a.tau.0 ~ dgamma(0.01, 0.01)
+lambda.a.0 ~ dgamma(0.01, 0.01)
+mu.b1.1.0 ~ dnorm(0, 0.0001)
+tau.b1.1.0 ~ dgamma(0.01, 0.01)
+lambda.b1.tau.0 ~ dgamma(0.01, 0.01)
+lambda.b1.0 ~ dgamma(0.01, 0.01)
+mu.b2.1.0 ~ dnorm(0, 0.0001)
+tau.b2.1.0 ~ dgamma(0.01, 0.01)
+lambda.b2.tau.0 ~ dgamma(0.01, 0.01)
+lambda.b2.0 ~ dgamma(0.01, 0.01)
+mu.b3.1.0 ~ dnorm(0, 0.0001)
+tau.b3.1.0 ~ dgamma(0.01, 0.01)
+lambda.b3.tau.0 ~ dgamma(0.01, 0.01)
+lambda.b3.0 ~ dgamma(0.01, 0.01)
+lambda.lambda.alpha.y ~ dgamma(0.01, 0.01)
+lambda.lambda.beta.y ~ dgamma(0.01, 0.01)
+
+# Train predictions
+for(i in 1:n){
+  yf[i] ~ dnorm(mu[i], tau.y[zip_code[i]]) 
+}
+
+# Test predictions
+for(i in 1:n_test){
+  yf_test[i] ~ dnorm(mu_test[i], tau.y[zip_code_test[i]]) 
+  mu_test[i] <- alpha[zip_code_test[i]] + 
+                beta_1[zip_code_test[i]]*x_test[i] + 
+                beta_2[zip_code_test[i]]*building_class_test[i] + 
+                beta_3[zip_code_test[i]]*building_class_test[i]*x_test[i]
+}
+
+}

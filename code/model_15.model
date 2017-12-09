@@ -1,0 +1,41 @@
+model {
+for(i in 1:n) {
+  y[i] ~ dnorm(mu[i], tau.y) 
+  mu[i] <-  alpha[zip_code[i]] + 
+            beta_1[zip_code[i]]*x[i]
+}
+tau.y ~ dgamma(0.001, 0.001)
+
+for(j in 1:n_zip){
+  alpha[j] ~ dnorm(mu.a[neighborhood[j]], tau.a[neighborhood[j]])
+  beta_1[j] ~ dnorm(mu.b1[neighborhood[j]], tau.b1[neighborhood[j]])
+}
+
+for(z in 1:n_neighborhood){
+  mu.a[z] ~ dnorm(mu.0.a, tau.a.0)
+  mu.b1[z] ~ dnorm(mu.0.b1, tau.0.b1)
+  tau.a[z] ~ dexp(lambda.a)
+  tau.b1[z] ~dexp(lambda.b1)
+}
+
+mu.0.a ~ dnorm(0, 0.0001)
+lambda.a ~ dgamma(0.001, 0.001)
+mu.0.b1 ~ dnorm(0, 0.0001)
+lambda.b1 ~ dgamma(0.001, 0.001)
+tau.a.0 ~ dgamma(0.001, 0.001)
+tau.0.b1 ~ dgamma(0.001, 0.001)
+
+
+# Train predictions
+for(i in 1:n){
+  yf[i] ~ dnorm(mu[i], tau.y) 
+}
+
+# Test predictions
+for(i in 1:n_test){
+  yf_test[i] ~ dnorm(mu_test[i], tau.y) 
+  mu_test[i] <- alpha[zip_code_test[i]] + 
+                beta_1[zip_code_test[i]]*x_test[i]
+}
+
+}

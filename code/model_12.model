@@ -1,0 +1,60 @@
+model {
+  for(i in 1:n) {
+    y[i] ~ dnorm(mu[i], tau.y) 
+    mu[i] <-  alpha[neighborhood[i]] + 
+              beta_1[neighborhood[i]]*x[i] + 
+              beta_2[neighborhood[i]]*building_class[i] + 
+              beta_3[neighborhood[i]]*building_class[i]*x[i]
+  }
+  tau.y ~ dgamma(0.1, 0.1)
+
+  for(j in 1:n_neighborhood){
+    alpha[j] ~ dnorm(mu.a[borough[j]], tau.a[borough[j]])
+    beta_1[j] ~ dnorm(mu.b1[borough[j]], tau.b1[borough[j]])
+    beta_2[j] ~ dnorm(mu.b2[borough[j]], tau.b2[borough[j]])
+    beta_3[j] ~ dnorm(mu.b3[borough[j]], tau.b3[borough[j]])
+  }
+
+  for(z in 1:n_borough){
+    mu.a[z] ~ dnorm(mu.0.a, tau.a.0)
+    mu.b1[z] ~ dnorm(mu.0.b1, tau.0.b1)
+    mu.b2[z] ~ dnorm(mu.0.b2, tau.0.b2)
+    mu.b3[z] ~ dnorm(mu.0.b3, tau.0.b3)
+    tau.a[z] ~ dgamma(alpha.a, beta.a)
+    tau.b1[z] ~ dgamma(alpha.b1, beta.b1)
+    tau.b2[z] ~ dgamma(alpha.b2, beta.b2)
+    tau.b3[z] ~ dgamma(alpha.b3, beta.b3)
+  }
+
+  mu.0.a ~ dnorm(0, 0.0001)
+  alpha.a ~ dgamma(0.1, 0.1)
+  beta.a ~ dgamma(0.1, 0.1)
+  mu.0.b1 ~ dnorm(0, 0.0001)
+  alpha.b1 ~ dgamma(0.1, 0.1)
+  beta.b1 ~ dgamma(0.1, 0.1)
+  mu.0.b2 ~ dnorm(0, 0.0001)
+  alpha.b2 ~ dgamma(0.1, 0.1)
+  beta.b2 ~ dgamma(0.1, 0.1)
+  mu.0.b3 ~ dnorm(0, 0.0001)
+  alpha.b3 ~ dgamma(0.1, 0.1)
+  beta.b3 ~ dgamma(0.1, 0.1)
+  tau.a.0 ~ dgamma(0.1, 0.1)
+  tau.0.b1 ~ dgamma(0.1, 0.1)
+  tau.0.b2 ~ dgamma(0.1, 0.1)
+  tau.0.b3 ~ dgamma(0.1, 0.1)
+
+  # Train predictions
+  for(i in 1:n){
+    yf[i] ~ dnorm(mu[i], tau.y) 
+  }
+
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau.y) 
+    mu_test[i] <- alpha[neighborhood_test[i]] + 
+                  beta_1[neighborhood_test[i]]*x_test[i] + 
+                  beta_2[neighborhood_test[i]]*building_class_test[i] + 
+                  beta_3[neighborhood_test[i]]*building_class_test[i]*x_test[i]
+  }
+
+}
