@@ -58,8 +58,11 @@ nyc_sales_list <- list(
 )
 
 
-
+######################################################
+######################################################
 ### Modelo de unidades iguales (complete pooling)
+######################################################
+######################################################
 
 string_mod_comp_pooling <- "model {
   #Likelihood
@@ -110,12 +113,14 @@ saveRDS(sim_comp_pooling, "../out/models/model_comp_pooling.rds")
 summary_mod_comp_pooling <- sim_comp_pooling$BUGSoutput$summary
 saveRDS(summary_mod_comp_pooling, "../out/models/summary_mod_comp_pooling.rds")
 
-if("summary_mod_comp_pooling.rds" %in% file_list){
-  summary_mod_comp_pooling <- read_rds("../out/models/summary_mod_comp_pooling.rds")
-} else {
-  summary_mod_comp_pooling <- read_rds("../out/models/model_comp_pooling.rds")$BUGSoutput$summary  
-  saveRDS(summary_mod_comp_pooling, "../out/models/summary_mod_comp_pooling.rds")
-  gc()
+if(!("summary_mod_comp_pooling" %in% objects())){
+  if("summary_mod_comp_pooling.rds" %in% file_list){
+    summary_mod_comp_pooling <- read_rds("../out/models/summary_mod_comp_pooling.rds")
+  } else {
+    summary_mod_comp_pooling <- read_rds("../out/models/model_comp_pooling.rds")$BUGSoutput$summary  
+    saveRDS(summary_mod_comp_pooling, "../out/models/summary_mod_comp_pooling.rds")
+    gc()
+  }
 }
 
 summary_mod_comp_pooling %>% 
@@ -159,7 +164,11 @@ preds_test_comp_pooling <- summary_mod_comp_pooling %>%
 (rmse_test_comp_pooling <- sqrt(mean(preds_test_comp_pooling$res^2)))
 (rmse_test_log_comp_pooling <- sqrt(mean((preds_test_comp_pooling$mean - log(preds_test_comp_pooling$obs))^2)))
 
-## Convergence diagnostocs
+###########################
+## Convergence diagnostics
+###########################
+
+## Gelman and Rubin R statistic
 
 summary_mod_comp_pooling %>% 
   as.data.frame() %>% 
@@ -167,8 +176,12 @@ summary_mod_comp_pooling %>%
   filter(!grepl("yf", rowname)) %>% 
   ggplot() + 
   geom_point(aes(rowname, Rhat)) +
-  geom_hline(yintercept = 1.2, color = 'grey', linetype = 'dashed') +
-  expand_limits(y = 0)
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
 
 summary_mod_comp_pooling %>% 
   as.data.frame() %>% 
@@ -178,8 +191,12 @@ summary_mod_comp_pooling %>%
   mutate(ix = 1:nrow(.)) %>% 
   ggplot() + 
   geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
-  geom_hline(yintercept = 1.2, color = 'grey', linetype = 'dashed') +
-  expand_limits(y = 0)
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
 
 summary_mod_comp_pooling %>% 
   as.data.frame() %>% 
@@ -189,17 +206,23 @@ summary_mod_comp_pooling %>%
   mutate(ix = 1:nrow(.)) %>% 
   ggplot() + 
   geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
-  geom_hline(yintercept = 1.2, color = 'grey', linetype = 'dashed') +
-  expand_limits(y = 0)
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
+
+# Effective sample size
 
 summary_mod_comp_pooling %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   filter(!grepl("yf", rowname)) %>% 
-  mutate(prop_n_eff = n.eff/4000) %>% 
   ggplot() + 
-  geom_point(aes(rowname, prop_n_eff)) +
-  geom_hline(yintercept = 1, color = 'grey', linetype = 'dashed') +
+  geom_point(aes(rowname, n.eff)) +
+  geom_hline(yintercept = 4000, 
+             color = 'grey', linetype = 'dashed') +
   expand_limits(y = 0)
 
 summary_mod_comp_pooling %>% 
@@ -228,3 +251,200 @@ summary_mod_comp_pooling %>%
 
 
 
+
+
+
+######################################################
+######################################################
+### Modelo de unidades distintas (no pooling)
+######################################################
+######################################################
+
+string_mod_no_pooling <- "model {
+  #Likelihood
+  for (i in 1:n) {
+    y[i] ~ dnorm(mu[i], tau)
+    mu[i] <- alpha[zip_code[i]] + beta[zip_code[i]]*x[i]
+  }
+  #Priors 
+  for(j in 1:n_zip){
+    alpha[j] ~ dnorm(0, 0.001)
+    beta[j] ~ dnorm(0, 0.001)
+  }
+  tau ~ dgamma(0.001, 0.001)
+  
+  # Train predictions
+  for(i in 1:n){
+    yf[i] ~ dnorm(mu[i], tau) 
+  }
+  
+  # Test predictions
+  for(i in 1:n_test){
+    yf_test[i] ~ dnorm(mu_test[i], tau) 
+    mu_test[i] <- alpha[zip_code_test[i]] + beta[zip_code_test[i]]*x_test[i]
+  }
+}"
+
+write_file(string_mod_no_pooling,
+           path = "model_no_pooling.model")
+
+inits_no_pooling <- function(){
+  list(
+    alpha = rnorm(nyc_sales_list$n_zip), 
+    beta = rnorm(nyc_sales_list$n_zip),
+    tau = (runif(1, 0, 100)^-2)
+  )
+}
+
+parameters_no_pooling <- c("alpha", "beta", "tau", "yf", "yf_test")
+
+sim_no_pooling <- jags(nyc_sales_list,
+                       inits_no_pooling,
+                       parameters_no_pooling,
+                       model.file = "model_no_pooling.model",
+                       n.iter = 4000,
+                       n.thin = 2,
+                       n.chains = 4,
+                       n.burnin = 2000)
+
+saveRDS(sim_no_pooling, "../out/models/model_no_pooling.rds")
+summary_mod_no_pooling <- sim_no_pooling$BUGSoutput$summary
+saveRDS(summary_mod_no_pooling, "../out/models/summary_mod_no_pooling.rds")
+
+if(!("summary_mod_no_pooling" %in% objects())){
+  if("summary_mod_no_pooling.rds" %in% file_list){
+    summary_mod_no_pooling <- read_rds("../out/models/summary_mod_no_pooling.rds")
+  } else {
+    summary_mod_no_pooling <- read_rds("../out/models/model_no_pooling.rds")$BUGSoutput$summary  
+    saveRDS(summary_mod_no_pooling, "../out/models/summary_mod_no_pooling.rds")
+    gc()
+  }
+}
+
+summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname))
+
+preds_no_pooling <- summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_train$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+preds_test_no_pooling <- summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+# Percentage of observations inside the 95% probability interval
+(preds_no_pooling %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_no_pooling)
+
+(preds_test_no_pooling %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_no_pooling)
+
+
+(rmse_train_no_pooling <- sqrt(mean(preds_no_pooling$res^2)))
+(rmse_train_log_no_pooling <- sqrt(mean((preds_no_pooling$mean - log(preds_no_pooling$obs))^2)))
+(rmse_test_no_pooling <- sqrt(mean(preds_test_no_pooling$res^2)))
+(rmse_test_log_no_pooling <- sqrt(mean((preds_test_no_pooling$mean - log(preds_test_no_pooling$obs))^2)))
+
+###########################
+## Convergence diagnostics
+###########################
+
+## Gelman and Rubin R statistic
+
+summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, Rhat), size = 0.7) +
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
+
+summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
+
+summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
+
+# Effective sample size
+
+summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, n.eff), size = 0.7) +
+  geom_hline(yintercept = 4000, 
+             color = 'grey', linetype = 'dashed') +
+  expand_limits(y = 0)
+
+summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, n.eff), size = 0.4, alpha = 0.7) +
+  geom_hline(yintercept = 4000, 
+             color = 'grey', linetype = 'dashed') +
+  expand_limits(y = 0)
+
+summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, n.eff), size = 0.4, alpha = 0.7) +
+  geom_hline(yintercept = 4000, 
+             color = 'grey', linetype = 'dashed') +
+  expand_limits(y = 0)
