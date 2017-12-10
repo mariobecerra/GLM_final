@@ -24,11 +24,13 @@
 
 \maketitle
 
-\input{sections/01_introduccion}
+\input{sections/introduccion}
 
-\input{sections/02_marco_teorico}
+\input{sections/datos}
 
-\input{sections/03_resultados}
+\input{sections/modelos}
+
+\input{sections/resultados}
 
 % Gráficas del diagnóstico de Gelman para convergencia
 % Comparar tamaño de muestra efectivo vs obtenido
@@ -37,13 +39,16 @@
 % Probar con distintas priors y ver si resultados son los mismos
 
 % Comparar coeficientes y promedios en distintos boroughs, vecindarios y zip codes
+% Ver RMSE por borough y vecindario para cada modelo
+
+% Mapa con valores de predicción junto con su correspondiente incertidumbre (la mitad de la longitud del intervalo de 95% de credibilidad)
 
 % Comparar modelo final con modelo de interceptos distintos por zip sin jerearquía
 % Comparar vs modelo nulo
 
 % Analizar algunos outliers del modelo
 
-\input{sections/04_conclusiones}
+\input{sections/conclusiones}
 
 \printbibliography
 \nocite{*}
