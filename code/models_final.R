@@ -764,3 +764,308 @@ summary_mod_three_levels %>%
   expand_limits(y = 0)
 
 
+
+
+
+######################################################
+######################################################
+### Partial pooling, three levels: borough, neighborhood & zip code.
+### t-distribugted response variable
+######################################################
+######################################################
+
+string_mod_tdist_three_levels <- "model {
+for(i in 1:n) {
+y[i] ~ dt(mu[i], sigma.y[zip_code[i]], nu[zip_code[i]]) 
+mu[i] <-  alpha[zip_code[i]] + 
+beta_1[zip_code[i]]*x[i] 
+}
+
+for(j in 1:n_zip){
+  alpha[j] ~ dnorm(mu.a[neighborhood[j]], tau.a[neighborhood[j]])
+  beta_1[j] ~ dnorm(mu.b1[neighborhood[j]], tau.b1[neighborhood[j]])
+  sigma.y[j] ~ dgamma(alpha.y[borough[j]], beta.y[borough[j]])
+  nu[j] <- nuMinusOne[j] + 1
+  nuMinusOne[j] ~ dexp(1/29)
+}
+
+for(j in 1:n_neighborhood){
+mu.a[j] ~ dnorm(mu.a.1[borough[j]], tau.a.1[borough[j]])
+tau.a[j] ~ dexp(lambda.a.1[borough[j]])
+mu.b1[j] ~ dnorm(mu.b1.1[borough[j]], tau.b1.1[borough[j]])
+tau.b1[j] ~ dexp(lambda.b1.1[borough[j]])
+alpha.y[j] ~ dexp(lambda.alpha.y[borough[j]])
+beta.y[j] ~ dexp(lambda.beta.y[borough[j]])
+}
+
+for(j in 1:n_borough){
+mu.a.1[j] ~ dnorm(mu.a.1.0, tau.a.1.0)
+tau.a.1[j] ~ dexp(lambda.a.tau.0)
+lambda.a.1[j] ~ dexp(lambda.a.0)
+
+mu.b1.1[j] ~ dnorm(mu.b1.1.0, tau.b1.1.0)
+tau.b1.1[j] ~ dexp(lambda.b1.tau.0)
+lambda.b1.1[j] ~ dexp(lambda.b1.0)
+
+lambda.alpha.y[j] ~ dexp(lambda.lambda.alpha.y)
+lambda.beta.y[j] ~ dexp(lambda.lambda.beta.y)
+}
+
+mu.a.1.0 ~ dnorm(0, 0.0001)
+tau.a.1.0 ~ dexp(0.01)
+lambda.a.tau.0 ~ dexp(0.01)
+lambda.a.0 ~ dexp(0.01)
+mu.b1.1.0 ~ dnorm(0, 0.0001)
+tau.b1.1.0 ~ dexp(0.01)
+lambda.b1.tau.0 ~ dexp(0.01)
+lambda.b1.0 ~ dexp(0.01)
+lambda.lambda.alpha.y ~ dexp(0.01)
+lambda.lambda.beta.y ~ dexp(0.01)
+
+# Train predictions
+for(i in 1:n){
+yf[i] ~ dt(mu[i], sigma.y[zip_code[i]], nu[zip_code[i]]) 
+}
+
+# Test predictions
+for(i in 1:n_test){
+yf_test[i] ~ dt(mu_test[i], sigma.y[zip_code_test[i]], nu[zip_code_test[i]]) 
+mu_test[i] <- alpha[zip_code_test[i]] + 
+              beta_1[zip_code_test[i]]*x_test[i] 
+}
+
+}"
+
+write_file(string_mod_tdist_three_levels,
+           path = "model_tdist_three_levels.model")
+
+inits_tdist_three_levels <- function(){
+  list(
+    nuMinusOne = runif(nyc_sales_list$n_zip, 0, 100),
+    sigma.y = runif(nyc_sales_list$n_zip, 0.1, 100),
+    alpha = rnorm(nyc_sales_list$n_zip), 
+    beta_1 = rnorm(nyc_sales_list$n_zip), 
+    mu.a = rnorm(nyc_sales_list$n_neighborhood),
+    mu.b1 = rnorm(nyc_sales_list$n_neighborhood),
+    tau.a = runif(nyc_sales_list$n_neighborhood, 0.1, 100),
+    tau.b1 = runif(nyc_sales_list$n_neighborhood, 0.1, 100),
+    alpha.y = runif(nyc_sales_list$n_neighborhood, 0.1, 100),
+    beta.y = runif(nyc_sales_list$n_neighborhood, 0.1, 100),
+    
+    mu.a.1 = rnorm(nyc_sales_list$n_borough),
+    tau.a.1 = runif(nyc_sales_list$n_borough, 0.1, 100),
+    lambda.a.1 = runif(nyc_sales_list$n_borough, 0.1, 100),
+    mu.b1.1 = rnorm(nyc_sales_list$n_borough),
+    tau.b1.1 = runif(nyc_sales_list$n_borough, 0.1, 100),
+    lambda.b1.1 = runif(nyc_sales_list$n_borough, 0.1, 100),
+    lambda.alpha.y = runif(nyc_sales_list$n_borough, 0.1, 100),
+    lambda.beta.y = runif(nyc_sales_list$n_borough, 0.1, 100),
+    
+    mu.a.1.0 = rnorm(1),
+    tau.a.1.0 = runif(1, 0.5, 3.5),
+    lambda.a.tau.0 = runif(1, 0.5, 3.5),
+    lambda.a.0 = runif(1, 0.5, 3.5),
+    mu.b1.1.0 = rnorm(1),
+    tau.b1.1.0 = runif(1, 0.5, 3.5),
+    lambda.b1.tau.0 = runif(1, 0.5, 3.5),
+    lambda.b1.0 = runif(1, 0.5, 3.5),
+    lambda.lambda.alpha.y = runif(1, 0.5, 3.5),
+    lambda.lambda.beta.y = runif(1, 0.5, 3.5)
+  )
+}
+
+parameters_tdist_three_levels <- c(
+  "sigma.y",
+  "nu",
+  "alpha",
+  "beta_1",
+  "mu.a",
+  "mu.b1",
+  "tau.a",
+  "tau.b1",
+  "alpha.y",
+  "beta.y",
+  
+  "mu.a.1",
+  "tau.a.1",
+  "lambda.a.1",
+  "mu.b1.1",
+  "tau.b1.1",
+  "lambda.b1.1",
+  "lambda.alpha.y",
+  "lambda.beta.y",
+  
+  "mu.a.1.0",
+  "tau.a.1.0",
+  "lambda.a.tau.0",
+  "lambda.a.0",
+  "mu.b1.1.0",
+  "tau.b1.1.0",
+  "lambda.b1.tau.0",
+  "lambda.b1.0",
+  "lambda.lambda.alpha.y",
+  "lambda.lambda.beta.y",
+  
+  "yf",
+  "yf_test"
+  
+)
+
+sim_tdist_three_levels <- jags(nyc_sales_list,
+                         inits_tdist_three_levels,
+                         parameters_tdist_three_levels,
+                         model.file = "model_tdist_three_levels.model",
+                         n.iter = 15000,
+                         n.chains = 4,
+                         n.thin = 5,
+                         n.burnin = 5000)
+
+saveRDS(sim_tdist_three_levels, "../out/models/model_tdist_three_levels.rds")
+summary_mod_tdist_three_levels <- sim_tdist_three_levels$BUGSoutput$summary
+saveRDS(summary_mod_tdist_three_levels, "../out/models/summary_mod_tdist_three_levels.rds")
+
+
+if(!("summary_mod_tdist_three_levels" %in% objects())){
+  if("summary_mod_tdist_three_levels.rds" %in% file_list){
+    summary_mod_tdist_three_levels <- read_rds("../out/models/summary_mod_tdist_three_levels.rds")
+  } else {
+    summary_mod_tdist_three_levels <- read_rds("../out/models/model_tdist_three_levels.rds")$BUGSoutput$summary  
+    saveRDS(summary_mod_tdist_three_levels, "../out/models/summary_mod_tdist_three_levels.rds")
+    gc()
+  }
+}
+
+summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname))
+
+preds_tdist_three_levels <- summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_train$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+preds_test_tdist_three_levels <- summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  slice(grep("test", rowname)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(obs = nyc_test$SALE_PRICE,
+         adj = exp(mean)) %>% 
+  mutate(res = obs - exp(mean))
+
+# Percentage of observations inside the 95% probability interval
+(preds_tdist_three_levels %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_tdist_three_levels)
+
+(preds_test_tdist_three_levels %>% 
+    mutate(in_interval = (log( obs) >= X2.5. & log( obs) <= X97.5.)) %>% 
+    .$in_interval %>% 
+    sum())/nrow(preds_test_tdist_three_levels)
+
+
+(rmse_train_tdist_three_levels <- sqrt(mean(preds_tdist_three_levels$res^2)))
+(rmse_train_log_tdist_three_levels <- sqrt(mean((preds_tdist_three_levels$mean - log(preds_tdist_three_levels$obs))^2)))
+(rmse_test_tdist_three_levels <- sqrt(mean(preds_test_tdist_three_levels$res^2)))
+(rmse_test_log_tdist_three_levels <- sqrt(mean((preds_test_tdist_three_levels$mean - log(preds_test_tdist_three_levels$obs))^2)))
+
+###########################
+## Convergence diagnostics
+###########################
+
+## Gelman and Rubin R statistic
+
+summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, Rhat), size = 0.7) +
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
+
+summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
+
+summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
+  geom_hline(yintercept = 1.2, 
+             linetype = 'dashed', 
+             size = 1, 
+             color = 'black', 
+             alpha = 0.6) +
+  expand_limits(y = 1)
+
+# Effective sample size
+
+summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, n.eff), size = 0.7) +
+  geom_hline(yintercept = 8000, 
+             color = 'grey', linetype = 'dashed') +
+  expand_limits(y = 0)
+
+summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(!grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, n.eff), size = 0.4, alpha = 0.7) +
+  geom_hline(yintercept = 8000, 
+             color = 'grey', linetype = 'dashed') +
+  expand_limits(y = 0)
+
+summary_mod_tdist_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("yf", rowname)) %>% 
+  filter(grepl("test", rowname)) %>% 
+  mutate(ix = 1:nrow(.)) %>% 
+  ggplot() + 
+  geom_point(aes(ix, n.eff), size = 0.4, alpha = 0.7) +
+  geom_hline(yintercept = 8000, 
+             color = 'grey', linetype = 'dashed') +
+  expand_limits(y = 0)
+
+
+
+
+
+
+
