@@ -3,4 +3,11 @@
 \section{Datos}
 \label{sec:datos}
 
-EDA chido.
+Los datos fueron obtenidos de Kaggle\footnote{\url{https://www.kaggle.com/new-york-city/nyc-property-sales}}, una plataforma de concursos de modelado predictivo y aprendizaje estadístico. Los datos de Kaggle, a su vez, provinieron de la página oficial del departamento de finanzas de la ciudad de Nueva York\footnote{\url{http://www1.nyc.gov/site/finance/taxes/property-rolling-sales-data.page}}.
+
+Los datos tienen variables relacionadas con las casas y sus ventas, como distrito (\textit{borough}), vecindario (\textit{neighborhood}), código postal (\textit{zip code}), dirección, precio de venta del inmueble, fecha de venta, tipo de inmueble, tamaño del inmueble, etc. No se tiene información muy específica como número de cuartos o de baños.
+
+Se tienen $84,548$ observaciones de un periodo de 12 meses (de septiembre de 2016 a agosto de 2017), las cuales no solo incluyen información de inmuebles residenciales, sino todo tipo de bienes raíces, por lo que se filtraron los datos para obtener solamente las observaciones correspondientes a casas. Además, había muchos datos que tenían como precio de venta 0, lo cual puede ser por herencia de padres a hijos o algún otro tipo de traspaso sin dinero\footnote{\url{http://www1.nyc.gov/assets/finance/downloads/pdf/07pdf/glossary_rsf071607.pdf}}. También existían ventas con valores no creíbles, como unos pocos miles de dólares, por lo que tampoco se tomaron en cuenta para este trabajo; además, también se filtraron las observaciones que no tenían información sobre el código postal. Después de este filtrado, quedaron $25,299$ observaciones.
+
+
+
