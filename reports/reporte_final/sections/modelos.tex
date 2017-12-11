@@ -15,10 +15,69 @@ De antemano se tiene conocimiento como para pensar que este modelo no es el más
 
 De hecho, en la figura \ref{fig:comp_pooling_resids} se puede ver este efecto. En la figura se muestran los residuales del modelo en el eje $y$, y en el eje $x$ se muestra el índice de la observación, donde las observaciones están ordenadas de acuerdo a código postal. Es evidente un patrón, que viene de la correlación entre las observaciones que existe dentro de cada código postal.
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{images/comp_pooling_resids.pdf}
     \caption{Residuales de modelo de unidades iguales}
     \label{fig:comp_pooling_resids}
 \end{figure}
 
+En la figura \ref{fig:comp_pooling_obs_vs_pred} se puede ver para cada observación el valor observado contra el valor ajustado. Se aprecia una varianza considerablemente grande y que además en los valores pequeños, el modelo tiende a sobreestimar, mientras que en valores grandes pasa lo contrario.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/comp_pooling_obs_vs_pred.pdf}
+    \caption{Ajustado contra observado en modelo de unidades iguales}
+    \label{fig:comp_pooling_obs_vs_pred}
+\end{figure}
+
+\subsection{Modelo de unidades independientes}
+
+Este es un modelo de interceptos y pendientes cambiantes de acuerdo al código postal, es decir, es de la forma $y_i \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}, \tau_y)$, donde $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son $\alpha[j] \sim \mathrm{N}(0, 0.001)$, $\beta[j] \sim \mathrm{N}(0, 0.001)$ y $\tau_y \sim \mathrm{Ga}(0.001, 0.001)$, para $j = 1, \hdots, J$, con $J = 154$ el número de códigos postales en la ciudad.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/no_pooling_resids.pdf}
+    \caption{Residuales de modelo de unidades independientes}
+    \label{fig:no_pooling_resids}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/no_pooling_obs_vs_pred.pdf}
+    \caption{Valor ajustado contra observado en modelo de unidades independientes}
+    \label{fig:no_pooling_obs_vs_pred}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/no_pooling_param_values.pdf}
+    \caption{Valor e intervalos de probabilidad de parámetros de modelo de unidades independientes}
+    \label{fig:no_pooling_param_values}
+\end{figure}
+
+
+\subsection{Modelo multinivel}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/three_levels_resids.pdf}
+    \caption{Residuales de modelo multinivel}
+    \label{fig:three_levels_resids}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/three_levels_obs_vs_pred.pdf}
+    \caption{Valor ajustado contra observado en modelo multinivel}
+    \label{fig:three_levels_obs_vs_pred}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/three_levels_param_values.pdf}
+    \caption{Valor e intervalos de probabilidad de parámetros de modelo multinivel}
+    \label{fig:three_levels_param_values}
+\end{figure}
