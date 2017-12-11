@@ -60,6 +60,135 @@ plot_obs_vs_pred <- function(pred_train, pred_test){
     ylab("Estimado")
 }
 
+rhat_statistic_params <- function(summary_mod){
+  sum_df <-summary_mod %>% 
+    as.data.frame() %>% 
+    rownames_to_column() %>% 
+    filter(!grepl("yf", rowname)) %>% 
+    mutate(ix = 1:nrow(.))
+  if(nrow(sum_df) > 30){
+    gg <- sum_df %>% 
+      ggplot() + 
+      geom_point(aes(ix, Rhat))
+  } else {
+    gg <- sum_df %>% 
+      ggplot() + 
+      geom_point(aes(rowname, Rhat))
+  }
+  gg_out <- gg +
+    geom_hline(yintercept = 1.2, 
+               linetype = 'dashed', 
+               size = 1, 
+               color = 'black', 
+               alpha = 0.6) +
+    expand_limits(y = 1) +
+    xlab("Parámetro")
+  return(gg_out)
+}
+
+rhat_statistic_yf <- function(summary_mod){
+  gg <- grid.arrange(
+    summary_mod %>% 
+      as.data.frame() %>% 
+      rownames_to_column() %>% 
+      filter(grepl("yf", rowname)) %>% 
+      filter(!grepl("test", rowname)) %>% 
+      mutate(ix = 1:nrow(.)) %>% 
+      ggplot() + 
+      geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
+      geom_hline(yintercept = 1.2, 
+                 linetype = 'dashed', 
+                 size = 1, 
+                 color = 'black', 
+                 alpha = 0.6) +
+      expand_limits(y = 1) +
+      xlab("Índice") +
+      ggtitle("Entrenamiento"),
+    summary_mod %>% 
+      as.data.frame() %>% 
+      rownames_to_column() %>% 
+      filter(grepl("yf", rowname)) %>% 
+      filter(grepl("test", rowname)) %>% 
+      mutate(ix = 1:nrow(.)) %>% 
+      ggplot() + 
+      geom_point(aes(ix, Rhat), size = 0.3, alpha = 0.5) +
+      geom_hline(yintercept = 1.2, 
+                 linetype = 'dashed', 
+                 size = 1, 
+                 color = 'black', 
+                 alpha = 0.6) +
+      expand_limits(y = 1) +
+      xlab("Índice") +
+      ggtitle("Prueba"),
+    ncol = 2
+  )
+  return(gg)
+}
+
+effective_sample_size_params <- function(summary_mod, nreal = 4000){
+  sum_df <- summary_mod %>% 
+    as.data.frame() %>% 
+    rownames_to_column() %>% 
+    filter(!grepl("yf", rowname)) %>% 
+    mutate(ix = 1:nrow(.))
+  if(nrow(sum_df) > 30){
+    gg <- sum_df %>% 
+      ggplot() + 
+      geom_point(aes(ix, n.eff))
+  } else {
+    gg <- sum_df %>% 
+      ggplot() + 
+      geom_point(aes(rowname, n.eff))
+  }
+  gg_out <- gg +
+    geom_hline(yintercept = nreal, 
+               color = 'grey', linetype = 'dashed') +
+    xlab("Parámetro") +
+    ylab("Tamaño de muestra efectivo") +
+    expand_limits(y = 0)
+  return(gg_out)
+}
+
+
+effective_sample_size_yf <- function(summary_mod, nreal = 4000){
+  gg_out <- grid.arrange(
+    summary_mod %>% 
+      as.data.frame() %>% 
+      rownames_to_column() %>% 
+      filter(grepl("yf", rowname)) %>% 
+      filter(!grepl("test", rowname)) %>% 
+      mutate(ix = 1:nrow(.)) %>% 
+      ggplot() + 
+      geom_point(aes(ix, n.eff), size = 0.4, alpha = 0.7) +
+      geom_hline(yintercept = nreal, 
+                 color = 'grey', linetype = 'dashed') +
+      xlab("Índice") +
+      ylab("Tamaño de muestra efectivo") +
+      ggtitle("Entrenamiento") +
+      expand_limits(y = 0),
+    
+    summary_mod %>% 
+      as.data.frame() %>% 
+      rownames_to_column() %>% 
+      filter(grepl("yf", rowname)) %>% 
+      filter(grepl("test", rowname)) %>% 
+      mutate(ix = 1:nrow(.)) %>% 
+      ggplot() + 
+      geom_point(aes(ix, n.eff), size = 0.4, alpha = 0.7) +
+      geom_hline(yintercept = nreal, 
+                 color = 'grey', linetype = 'dashed') +
+      xlab("Índice") +
+      ylab("") +
+      ggtitle("Prueba") +
+      expand_limits(y = 0),
+    ncol = 2
+  ) 
+  return(gg_out)
+}
+
+
+
+
 ######################################################
 ######################################################
 ### Datos
@@ -144,6 +273,31 @@ summary_mod_comp_pooling %>%
 (rmse_test_comp_pooling <- sqrt(mean(preds_test_comp_pooling$res^2)))
 
 
+
+###########################
+## Convergence diagnostics
+###########################
+
+## Gelman and Rubin R statistic
+
+rhat_statistic_params(summary_mod_comp_pooling) %>% 
+  ggsave(., filename = "../out/plots/comp_pooling_r_statistic_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+rhat_statistic_yf(summary_mod_comp_pooling) %>% 
+  ggsave(., filename = "../out/plots/comp_pooling_r_statistic_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+# Effective sample size
+
+effective_sample_size_params(summary_mod_comp_pooling, 4000) %>% 
+  ggsave(., filename = "../out/plots/comp_pooling_n_eff_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+effective_sample_size_yf(summary_mod_comp_pooling, 4000) %>% 
+  ggsave(., filename = "../out/plots/comp_pooling_n_eff_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
 ### Plot residuals
 plot_residuals_train_test(preds_comp_pooling$mean, 
                           log(preds_comp_pooling$obs), 
@@ -151,14 +305,14 @@ plot_residuals_train_test(preds_comp_pooling$mean,
                           log(preds_test_comp_pooling$obs)) %>% 
   ggsave(., 
          file = "../out/plots/comp_pooling_resids.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 
 ### Observado contra ajustado
 plot_obs_vs_pred(preds_comp_pooling, preds_test_comp_pooling) %>% 
   ggsave(., 
          file = "../out/plots/comp_pooling_obs_vs_pred.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 
 ###
@@ -192,6 +346,7 @@ preds_test_comp_pooling %>%
     theme_bw(base_size = 7)) %>% 
   ggsave(., filename = "../out/plots/comp_pooling_obs_vs_pred_test_zip.pdf", 
          device = 'pdf', width = 200, height = 260, units = "mm")
+
 
 
 # preds_test_comp_pooling %>% 
@@ -306,6 +461,31 @@ preds_test_no_pooling <- summary_mod_no_pooling %>%
 (rmse_train_no_pooling <- sqrt(mean(preds_no_pooling$res^2)))
 (rmse_test_no_pooling <- sqrt(mean(preds_test_no_pooling$res^2)))
 
+
+###########################
+## Convergence diagnostics
+###########################
+
+## Gelman and Rubin R statistic
+
+rhat_statistic_params(summary_mod_no_pooling) %>% 
+  ggsave(., filename = "../out/plots/no_pooling_r_statistic_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+rhat_statistic_yf(summary_mod_no_pooling) %>% 
+  ggsave(., filename = "../out/plots/no_pooling_r_statistic_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+# Effective sample size
+
+effective_sample_size_params(summary_mod_no_pooling, 4000) %>% 
+  ggsave(., filename = "../out/plots/no_pooling_n_eff_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+effective_sample_size_yf(summary_mod_no_pooling, 4000) %>% 
+  ggsave(., filename = "../out/plots/no_pooling_n_eff_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
 ### Plot residuals
 plot_residuals_train_test(preds_no_pooling$mean, 
                           log(preds_no_pooling$obs), 
@@ -313,14 +493,14 @@ plot_residuals_train_test(preds_no_pooling$mean,
                           log(preds_test_no_pooling$obs)) %>% 
   ggsave(., 
          file = "../out/plots/no_pooling_resids.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 
 ### Observado contra ajustado
 plot_obs_vs_pred(preds_no_pooling, preds_test_no_pooling) %>% 
   ggsave(., 
          file = "../out/plots/no_pooling_obs_vs_pred.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 (preds_test_no_pooling %>% 
     mutate(zip_code = paste(substr(nyc_test$Borough, 1, 2), nyc_test$zip_code_int)) %>% 
@@ -433,6 +613,32 @@ preds_test_three_levels <- summary_mod_three_levels %>%
 (rmse_train_three_levels <- sqrt(mean(preds_three_levels$res^2)))
 (rmse_test_three_levels <- sqrt(mean(preds_test_three_levels$res^2)))
 
+
+###########################
+## Convergence diagnostics
+###########################
+
+## Gelman and Rubin R statistic
+
+rhat_statistic_params(summary_mod_three_levels) %>% 
+  ggsave(., filename = "../out/plots/three_levels_r_statistic_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+rhat_statistic_yf(summary_mod_three_levels) %>% 
+  ggsave(., filename = "../out/plots/three_levels_r_statistic_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+# Effective sample size
+
+effective_sample_size_params(summary_mod_three_levels, 8000) %>% 
+  ggsave(., filename = "../out/plots/three_levels_n_eff_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+effective_sample_size_yf(summary_mod_three_levels, 8000) %>% 
+  ggsave(., filename = "../out/plots/three_levels_n_eff_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+
 ### Plot residuals
 plot_residuals_train_test(preds_three_levels$mean, 
                           log(preds_three_levels$obs), 
@@ -440,14 +646,14 @@ plot_residuals_train_test(preds_three_levels$mean,
                           log(preds_test_three_levels$obs)) %>% 
   ggsave(., 
          file = "../out/plots/three_levels_resids.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 
 ### Observado contra ajustado
 plot_obs_vs_pred(preds_three_levels, preds_test_three_levels) %>% 
   ggsave(., 
          file = "../out/plots/three_levels_obs_vs_pred.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 (preds_test_three_levels %>% 
     mutate(zip_code = paste(substr(nyc_test$Borough, 1, 2), nyc_test$zip_code_int)) %>% 
@@ -589,6 +795,32 @@ preds_test_tdist_three_levels <- summary_mod_tdist_three_levels %>%
 
 
 
+###########################
+## Convergence diagnostics
+###########################
+
+## Gelman and Rubin R statistic
+
+rhat_statistic_params(summary_mod_tdist_three_levels) %>% 
+  ggsave(., filename = "../out/plots/tdist_three_levels_r_statistic_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+rhat_statistic_yf(summary_mod_tdist_three_levels) %>% 
+  ggsave(., filename = "../out/plots/tdist_three_levels_r_statistic_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+# Effective sample size
+
+effective_sample_size_params(summary_mod_tdist_three_levels, 8000) %>% 
+  ggsave(., filename = "../out/plots/tdist_three_levels_n_eff_params.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+effective_sample_size_yf(summary_mod_tdist_three_levels, 8000) %>% 
+  ggsave(., filename = "../out/plots/tdist_three_levels_n_eff_yf.pdf", 
+         device = "pdf", width = 150, height = 80, units = "mm")
+
+
+
 ### Plot residuals
 plot_residuals_train_test(preds_tdist_three_levels$mean, 
                           log(preds_tdist_three_levels$obs), 
@@ -596,14 +828,14 @@ plot_residuals_train_test(preds_tdist_three_levels$mean,
                           log(preds_test_tdist_three_levels$obs)) %>% 
   ggsave(., 
          file = "../out/plots/tdist_three_levels_resids.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 
 ### Observado contra ajustado
 plot_obs_vs_pred(preds_tdist_three_levels, preds_test_tdist_three_levels) %>% 
   ggsave(., 
          file = "../out/plots/tdist_three_levels_obs_vs_pred.pdf", 
-         device = "pdf")
+         device = "pdf", width = 150, height = 80, units = "mm")
 
 (preds_test_tdist_three_levels %>% 
     mutate(zip_code = paste(substr(nyc_test$Borough, 1, 2), nyc_test$zip_code_int)) %>% 
