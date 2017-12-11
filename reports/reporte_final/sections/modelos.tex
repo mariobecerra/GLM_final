@@ -59,6 +59,72 @@ Este es un modelo de interceptos y pendientes cambiantes de acuerdo al código p
 
 \subsection{Modelo multinivel}
 
+En el modelo multinivel o jerárquico, también ajustamos distintos interceptos y pendientes de acuerdo a cada código postal, pero en lugar de considerar cada código postal como una unidad independiente, se le agregaron dos niveles más de hiperparámetros, correspondientes a los vecindarios de la ciudad, y a cada distrito (\textit{borough}). Además, en este modelo no se asume varianza constante en las observaciones, sino que cambian de acuerdo al código postal.
+
+El modelo ajustado fue de la forma $y_i ~ \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}, \tau_{j[i]})$, donde nuevamente $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son $\alpha_j \sim \mathrm{N} (\mu_{\alpha, k[j]}, \tau_{\alpha, k[j]})$, $\beta_j \sim \mathrm{N} (\mu_{\beta, k[j]}, \tau_{\beta, k[j]})$ y $\tau_{j[i]} \sim \mathrm{Ga}(\alpha_{y, l[k]}, \beta_{y, l[k]})$, donde $k[j]$ se refiere al vecindario correspondiente al $j$-ésimo código postal, y $l[k]$ se refiere al distrito correspondiente al $k$-ésimo vecindario. Las distribuciones previas de estos hiperparámetros son 
+
+\begin{itemize}
+
+	\item $\mu_{\alpha, k[j]} \sim \mathrm{N} (\mu_{\alpha, l[k]}, \tau_{\alpha, l[k]})$
+
+	\item $\tau_{\alpha, k[j]} \sim \mathrm{exp} (\lambda_{\alpha, l[k]})$
+
+	\item $\mu_{\beta, k[j]} \sim \mathrm{N} (\mu_{\beta, l[k]}, \tau_{\beta, l[k]})$
+
+	\item $\tau_{\beta, k[j]} \sim \mathrm{exp} (\lambda_{\beta, l[k]})$
+
+	\item $\alpha_{y, l[k]} \sim \mathrm{exp} (\lambda_{\alpha_y, l[k]})$
+
+	\item $\beta_{y, l[k]} \sim \mathrm{exp} (\lambda_{\beta_y, l[k]}$
+
+\end{itemize}
+
+Y sus correspondientes hiperparámetros se distribuyen:
+
+\begin{itemize}
+
+	\item $\mu_{\alpha, l[k]} \sim \mathrm{N}(\mu_{\alpha_0})$
+	
+	\item $\tau_{\alpha, l[k]} \sim \mathrm{exp}(\lambda_{\tau_{\alpha_0}})$
+	
+	\item $\lambda_{\alpha, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\alpha_0}})$
+	
+	\item $\mu_{\beta, l[k]} \sim \mathrm{N}(\mu_{\beta_0})$
+	
+	\item $\tau_{\beta, l[k]} \sim \mathrm{exp}(\lambda_{\tau_{\beta_0}})$
+	
+	\item $\lambda_{\beta, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\beta_0}})$
+	
+	\item $\lambda_{\alpha_y, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\alpha_y}})$
+	
+	\item $\lambda_{\beta_y, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\beta_y}})$
+	
+
+\end{itemize}
+
+Con sus correspondientes distribuciones previas:
+
+\begin{itemize}
+
+	\item $\mu_{\alpha_0} \sim \mathrm{N}(0, 0.0001)$
+	
+	\item $\lambda_{\tau_{\alpha_0}} \sim \mathrm{exp}(0.01)$
+	
+	\item $\lambda_{\lambda_{\alpha_0}} \sim \mathrm{exp}(0.01)$
+	
+	\item $\mu_{\beta_0} \sim \mathrm{N}(0, 0.0001)$
+	
+	\item $\lambda_{\tau_{\beta_0}} \sim \mathrm{exp}(0.01)$
+	
+	\item $\lambda_{\lambda_{\beta_0}} \sim \mathrm{exp}(0.01)$
+	
+	\item $\lambda_{\lambda_{\alpha_y}} \sim \mathrm{exp}(0.01)$
+	
+	\item $\lambda_{\lambda_{\beta_y}} \sim \mathrm{exp}(0.01)$
+	
+\end{itemize}
+
+Se tienen en total 759 parámetros
 
 
 \begin{figure}[H]
