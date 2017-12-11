@@ -1,6 +1,5 @@
 *.Rhistory
 reports/*.html
-reports/*.pdf
 data/*.zip
 data/ignore/*
 out/models/*
