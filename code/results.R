@@ -222,6 +222,110 @@ nyc_train <- nyc_sales %>%
 nyc_test <- nyc_sales %>% 
   filter(!(id %in% nyc_train$id))
 
+######################################################
+######################################################
+### Gráficas para EDA
+######################################################
+######################################################
+
+grid.arrange(nyc_sales %>% 
+               ggplot() + 
+               geom_histogram(aes(SALE_PRICE)) + 
+               labs(x = "Precio de venta", y = "Frecuencia"), 
+             nyc_sales %>% 
+               ggplot() + 
+               geom_histogram(aes(log(SALE_PRICE))) + 
+               labs(x = "Logaritmo del precio de venta", y = "Frecuencia"), 
+             ncol=2) %>% 
+  ggsave(., filename = "../out/plots/eda_histograma_precio_venta.pdf", 
+         device = "pdf", width = 200, height = 100, units = "mm")
+
+grid.arrange(nyc_sales %>% 
+               ggplot() + 
+               geom_histogram(aes(GROSS_SQUARE_FEET)) + 
+               labs(x = "Superficie total", y = "Frecuencia"), 
+             nyc_sales %>% 
+               ggplot() + 
+               geom_histogram(aes(log(GROSS_SQUARE_FEET))) + 
+               labs(x = "Superficie total", y = "Frecuencia")  , 
+             ncol=2) %>% 
+  ggsave(., filename = "../out/plots/eda_histograma_superficie.pdf", 
+         device = "pdf", width = 200, height = 70, units = "mm")
+
+
+
+grid.arrange(nyc_sales %>% 
+               ggplot() + 
+               geom_histogram(aes(LAND_SQUARE_FEET)) + labs(x = "Superficie ", y = "Frecuencia"), 
+             nyc_sales %>% 
+               ggplot() + 
+               geom_histogram(aes(log(LAND_SQUARE_FEET))) + 
+               labs(x = "Superficie", y = "Frecuencia"), 
+             ncol=2) %>% 
+  ggsave(., filename = "../out/plots/eda_histograma_superficie_total_land.pdf", 
+         device = "pdf", width = 200, height = 70, units = "mm")
+
+(nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5) + 
+  labs(x = "Logaritmo de superficie total", y = "Logaritmo de precio de venta")) %>% 
+  ggsave(., filename = "../out/plots/eda_dispersion_superficie_vs_precio.pdf", 
+         device = "pdf", width = 200, height = 150, units = "mm")
+
+(nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(LAND_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5) + 
+  labs(x = "Logaritmo de superficie total", y = "Logaritmo de precio de venta")) %>% 
+  ggsave(., filename = "../out/plots/eda_dispersion_superficie_total_vs_precio.pdf", 
+         device = "pdf", width = 200, height = 150, units = "mm")
+
+
+(nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5) + 
+  labs(x = "Logaritmo de superficie total", y = "Logaritmo de superficie")) %>% 
+  ggsave(., filename = "../out/plots/eda_dispersion_superficie_total_vs_superficie.pdf", 
+         device = "pdf", width = 200, height = 150, units = "mm")
+
+(nyc_sales %>% 
+  ggplot() +
+  geom_histogram(aes(x = log(SALE_PRICE), y = ..density..)) +
+  facet_wrap(~Borough) + 
+  labs(x = "Logaritmo de precio de venta", y = "Densidad")) %>% 
+  ggsave(., filename = "../out/plots/eda_histogram_price_borough.pdf", 
+         device = "pdf", width = 200, height = 150, units = "mm")
+
+(nyc_sales %>% 
+  ggplot(aes(x = Borough, y = log(SALE_PRICE))) +
+  geom_boxplot() + 
+  stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+               width = .75, linetype = "dashed") + 
+  labs(x = "", y = "Logaritmo de precio de venta")) %>% 
+  ggsave(., filename = "../out/plots/eda_boxplot_price_borough.pdf", 
+         device = "pdf", width = 200, height = 150, units = "mm")
+
+
+(nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  ggplot(aes(x = log(PRICE_PER_SQ_FT), y = ..density..)) +
+  geom_histogram() + 
+  facet_wrap(~Borough) + labs(x= "Precio x pie cuadrado" , y = "Densidad")) %>% 
+  ggsave(., filename = "../out/plots/eda_histogram_precio_pie_cuad_borough.pdf", 
+         device = "pdf", width = 200, height = 150, units = "mm")
+
+
+(nyc_sales %>% 
+    mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+    ggplot(aes(x = Borough, y = log(PRICE_PER_SQ_FT))) +
+    geom_boxplot() + 
+    labs(x= "Precio x pie cuadrado" , y = "Densidad")) %>% 
+  ggsave(., filename = "../out/plots/eda_boxplot_precio_pie_cuad_borough.pdf", 
+         device = "pdf", width = 200, height = 150, units = "mm")
+
+
+
+
+
 
 ######################################################
 ######################################################
