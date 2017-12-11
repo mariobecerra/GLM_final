@@ -3,5 +3,6 @@ reports/*.html
 data/*.zip
 data/ignore/*
 out/models/*
+out/plots/*
 reports/modelos_cache
 reports/modelos_files
