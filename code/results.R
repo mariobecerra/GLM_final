@@ -385,6 +385,10 @@ summary_mod_comp_pooling %>%
 (rmse_train_comp_pooling <- sqrt(mean(preds_comp_pooling$res^2)))
 (rmse_test_comp_pooling <- sqrt(mean(preds_test_comp_pooling$res^2)))
 
+# MAEs
+(mae_train_comp_pooling <- mean(abs(preds_comp_pooling$res)))
+(mae_test_comp_pooling <- mean(abs(preds_test_comp_pooling$res)))
+
 
 
 ###########################
@@ -571,8 +575,14 @@ preds_test_no_pooling <- summary_mod_no_pooling %>%
     sum())/nrow(preds_test_no_pooling)
 
 
+# RMSEs
 (rmse_train_no_pooling <- sqrt(mean(preds_no_pooling$res^2)))
 (rmse_test_no_pooling <- sqrt(mean(preds_test_no_pooling$res^2)))
+
+# MAEs
+(mae_train_no_pooling <- mean(abs(preds_no_pooling$res)))
+(mae_test_no_pooling <- mean(abs(preds_test_no_pooling$res)))
+
 
 
 ###########################
@@ -723,8 +733,14 @@ preds_test_three_levels <- summary_mod_three_levels %>%
     sum())/nrow(preds_test_three_levels)
 
 
+# RMSEs
 (rmse_train_three_levels <- sqrt(mean(preds_three_levels$res^2)))
 (rmse_test_three_levels <- sqrt(mean(preds_test_three_levels$res^2)))
+
+# MAEs
+(mae_train_three_levels <- mean(abs(preds_three_levels$res)))
+(mae_test_three_levels <- mean(abs(preds_test_three_levels$res)))
+
 
 
 ###########################
@@ -980,3 +996,23 @@ plot_obs_vs_pred(preds_tdist_three_levels, preds_test_tdist_three_levels) %>%
   ggsave(., 
          file = "../out/plots/tdist_three_levels_param_values.pdf", 
          device = "pdf", width = 150, height = 80, units = "mm")
+
+########
+# DICs
+########
+
+readRDS("../out/models/model_comp_pooling.rds")$BUGSoutput$DIC
+gc()
+readRDS("../out/models/model_no_pooling.rds")$BUGSoutput$DIC
+gc()
+readRDS("../out/models/model_three_levels.rds")$BUGSoutput$DIC
+gc()
+
+# > readRDS("../out/models/model_comp_pooling.rds")$BUGSoutput$DIC
+# [1] 630996.6
+# > readRDS("../out/models/model_no_pooling.rds")$BUGSoutput$DIC
+# [1] 7239403
+# > readRDS("../out/models/model_three_levels.rds")$BUGSoutput$DIC
+# [1] 16716.46
+
+
