@@ -19,7 +19,7 @@ De antemano se tiene conocimiento como para pensar que este modelo no es el más
 Este es un modelo de interceptos y pendientes cambiantes de acuerdo al código postal, es decir, es de la forma 
 
 \[
-	y_i \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}, \tau_y),
+	y_i \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}x_i, \tau_y),
 \]
 
 donde $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son 
@@ -36,7 +36,7 @@ para $j = 1, \hdots, J$, con $J = 154$ el número de códigos postales en la ciu
 
 En el modelo multinivel o jerárquico, también ajustamos distintos interceptos y pendientes de acuerdo a cada código postal, pero en lugar de considerar cada código postal como una unidad independiente, se le agregaron dos niveles más de hiperparámetros, correspondientes a los vecindarios de la ciudad, y a cada distrito (\textit{borough}). Además, en este modelo no se asume varianza constante en las observaciones, sino que cambian de acuerdo al código postal.
 
-El modelo ajustado fue de la forma $y_i ~ \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}, \tau_{j[i]})$, donde nuevamente $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son $\alpha_j \sim \mathrm{N} (\mu_{\alpha, k[j]}, \tau_{\alpha, k[j]})$, $\beta_j \sim \mathrm{N} (\mu_{\beta, k[j]}, \tau_{\beta, k[j]})$ y $\tau_{j[i]} \sim \mathrm{Ga}(\alpha_{y, l[k]}, \beta_{y, l[k]})$, donde $k[j]$ se refiere al vecindario correspondiente al $j$-ésimo código postal, y $l[k]$ se refiere al distrito correspondiente al $k$-ésimo vecindario. Las distribuciones previas de estos hiperparámetros son 
+El modelo ajustado fue de la forma $y_i ~ \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}x_i, \tau_{j[i]})$, donde nuevamente $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son $\alpha_j \sim \mathrm{N} (\mu_{\alpha, k[j]}, \tau_{\alpha, k[j]})$, $\beta_j \sim \mathrm{N} (\mu_{\beta, k[j]}, \tau_{\beta, k[j]})$ y $\tau_{j[i]} \sim \mathrm{Ga}(\alpha_{y, l[k]}, \beta_{y, l[k]})$, donde $k[j]$ se refiere al vecindario correspondiente al $j$-ésimo código postal, y $l[k]$ se refiere al distrito correspondiente al $k$-ésimo vecindario. Las distribuciones previas de estos hiperparámetros son 
 
  \begin{multicols}{3}
     \begin{itemize}
