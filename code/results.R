@@ -658,6 +658,59 @@ plot_obs_vs_pred(preds_no_pooling, preds_test_no_pooling) %>%
 
 
 
+params_zip_no_pooling <- summary_mod_no_pooling %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(grepl("alpha[", rowname, fixed = T)) %>% 
+  set_names(paste0("alpha_", make.names(names(.)))) %>% 
+  mutate(zip_code_int = 1:nrow(.)) %>% 
+  bind_cols(
+    summary_mod_no_pooling %>% 
+      as.data.frame() %>% 
+      rownames_to_column() %>% 
+      filter(grepl("beta[", rowname, fixed = T)) %>% 
+      set_names(paste0("beta_", make.names(names(.))))
+  ) %>% 
+  full_join(
+    nyc_train %>% 
+      mutate(
+        x = log(GROSS_SQUARE_FEET),
+        y = log(SALE_PRICE)) %>% 
+      select(x, y, zip_code, zip_code_int, Borough, Neighborhood)
+  ) %>% 
+  select(alpha_mean, beta_mean, x, y, zip_code_int, Neighborhood, Borough) %>% 
+  mutate(yhat = alpha_mean + beta_mean*x)
+
+
+
+# Zip code regression lines by neighborhood
+(expand.grid(1:max(nyc_train$zip_code_int), 
+             seq(from = 6, to = 10.5, length.out = 50)) %>% 
+    set_names(c("zip_code_int", "x")) %>% 
+    left_join(params_zip_no_pooling %>% 
+                select(zip_code_int, alpha_mean, beta_mean, Neighborhood, Borough)) %>% 
+    mutate(yhat = alpha_mean + beta_mean*x,
+           y = alpha_mean + beta_mean*x) %>% 
+    unique() %>% 
+    full_join(params_zip_no_pooling) %>% 
+    mutate(zip_code_int = as.character(zip_code_int),
+           Neighborhood2 = paste(Borough,"\n", Neighborhood)) %>% 
+    ggplot(aes(x, y)) +
+    geom_point(size = 0.2, alpha = 0.2, color = 'dark grey') +
+    geom_line(aes(y = yhat, group = zip_code_int)) + 
+    xlim(6, 10.5) +
+    ylim(12, 16) +
+    xlab("Logaritmo de superficie de terreno") +
+    ylab("Logaritmo de precio") +
+    facet_wrap(~Neighborhood2) +
+    theme_bw(base_size = 7)) %>% 
+  ggsave(., filename = "../out/plots/no_pooling_obs_vs_pred_train_by_neighborhood_zip_regression_lines.pdf", 
+         device = 'pdf', width = 216, height = 280, units = "mm")
+
+
+
+
+
 # (summary_mod_no_pooling %>%
 #     as.data.frame() %>%
 #     rownames_to_column() %>%
@@ -816,7 +869,34 @@ plot_obs_vs_pred(preds_three_levels, preds_test_three_levels) %>%
          device = "pdf", width = 150, height = 80, units = "mm")
 
 
-summary_mod_three_levels %>% 
+# summary_mod_three_levels %>% 
+#   as.data.frame() %>% 
+#   rownames_to_column() %>% 
+#   filter(grepl("alpha[", rowname, fixed = T)) %>% 
+#   set_names(paste0("alpha_", make.names(names(.)))) %>% 
+#   mutate(zip_code_int = 1:nrow(.)) %>% 
+#   bind_cols(
+#     summary_mod_three_levels %>% 
+#       as.data.frame() %>% 
+#       rownames_to_column() %>% 
+#       filter(grepl("beta_1[", rowname, fixed = T)) %>% 
+#       set_names(paste0("beta_", make.names(names(.))))
+#   ) %>% 
+#   full_join(
+#     nyc_train %>% 
+#       mutate(
+#         x = log(GROSS_SQUARE_FEET),
+#         y = log(SALE_PRICE)) %>% 
+#       select(x, y, zip_code, zip_code_int, Borough, Neighborhood)
+#   ) %>% 
+#   mutate(yhat = alpha_mean + beta_mean*x) %>% 
+#   ggplot(aes(x, y)) +
+#   geom_point(size = 0.4, alpha = 0.4) +
+#   geom_line(aes(y = yhat, group = zip_code)) +
+#   facet_wrap(~Neighborhood)
+
+
+params_zip_three_levels <- summary_mod_three_levels %>% 
   as.data.frame() %>% 
   rownames_to_column() %>% 
   filter(grepl("alpha[", rowname, fixed = T)) %>% 
@@ -836,11 +916,68 @@ summary_mod_three_levels %>%
         y = log(SALE_PRICE)) %>% 
       select(x, y, zip_code, zip_code_int, Borough, Neighborhood)
   ) %>% 
-  mutate(yhat = alpha_mean + beta_mean*x) %>% 
-  ggplot(aes(x, y)) +
-  geom_point(size = 0.4, alpha = 0.4) +
-  geom_line(aes(y = yhat, group = zip_code)) +
-  facet_wrap(~Neighborhood)
+  select(alpha_mean, beta_mean, x, y, zip_code_int, Neighborhood, Borough) %>% 
+  mutate(yhat = alpha_mean + beta_mean*x)
+
+# Zip code regression lines by neighborhood
+(expand.grid(1:max(nyc_train$zip_code_int), 
+             seq(from = 6, to = 10.5, length.out = 50)) %>% 
+    set_names(c("zip_code_int", "x")) %>% 
+    left_join(params_zip_three_levels %>% 
+                select(zip_code_int, alpha_mean, beta_mean, Neighborhood, Borough)) %>% 
+    mutate(yhat = alpha_mean + beta_mean*x,
+           y = alpha_mean + beta_mean*x) %>% 
+    unique() %>% 
+    full_join(params_zip_three_levels) %>% 
+    mutate(zip_code_int = as.character(zip_code_int),
+           Neighborhood2 = paste(Borough,"\n", Neighborhood)) %>% 
+    ggplot(aes(x, y)) +
+    geom_point(size = 0.2, alpha = 0.2, color = 'dark grey') +
+    geom_line(aes(y = yhat, group = zip_code_int)) + 
+    xlim(6, 10.5) +
+    ylim(12, 16) +
+    xlab("Logaritmo de superficie de terreno") +
+    ylab("Logaritmo de precio") +
+    facet_wrap(~Neighborhood2) +
+    theme_bw(base_size = 7)) %>% 
+  ggsave(., filename = "../out/plots/three_levels_obs_vs_pred_train_by_neighborhood_zip_regression_lines.pdf", 
+         device = 'pdf', width = 216, height = 280, units = "mm")
+
+
+
+
+### Zip code regression lines by zip code
+# summary_mod_three_levels %>% 
+#   as.data.frame() %>% 
+#   rownames_to_column() %>% 
+#   filter(grepl("alpha[", rowname, fixed = T)) %>% 
+#   set_names(paste0("alpha_", make.names(names(.)))) %>% 
+#   mutate(zip_code_int = 1:nrow(.)) %>% 
+#   bind_cols(
+#     summary_mod_three_levels %>% 
+#       as.data.frame() %>% 
+#       rownames_to_column() %>% 
+#       filter(grepl("beta_1[", rowname, fixed = T)) %>% 
+#       set_names(paste0("beta_", make.names(names(.))))
+#   ) %>% 
+#   full_join(
+#     nyc_train %>% 
+#       mutate(
+#         x = log(GROSS_SQUARE_FEET),
+#         y = log(SALE_PRICE)) %>% 
+#       select(x, y, zip_code, zip_code_int, Borough, Neighborhood)
+#   ) %>% 
+#   select(alpha_mean, beta_mean, x, y, zip_code_int, zip_code) %>% 
+#   bind_rows(
+#     expand.grid(1:max(nyc_train$zip_code_int), c(6, 11)) %>% 
+#       set_names(c("zip_code_int", "x")) %>% 
+#       mutate(x = NA, y = )
+#   ) %>% 
+#   mutate(yhat = alpha_mean + beta_mean*x) %>% 
+#   ggplot(aes(x, y)) +
+#   geom_point(size = 0.2, alpha = 0.2, color = 'dark grey') +
+#   geom_line(aes(y = yhat, group = zip_code)) +
+#   facet_wrap(~Neighborhood)
 
 
 summary_mod_three_levels %>% 

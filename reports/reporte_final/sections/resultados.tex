@@ -66,20 +66,37 @@ En las figuras \ref{fig:no_pooling_param_values} y \ref{fig:three_levels_param_v
     \label{fig:three_levels_param_values}
 \end{figure}
 
+Para observar el efecto de las diferencias en los parámetros, en las figuras \ref{fig:no_pooling_obs_vs_pred_train_by_neighborhood_zip_regression_lines} y \ref{fig:three_levels_obs_vs_pred_train_by_neighborhood_zip_regression_lines} se muestran las pendientes de regresión de código postal de cada modelo. Cada figura tiene muchas subgráficas, cada una representando un vecindario. Dentro de cada subgráfica se muestran los puntos de las ventas y además las líneas de regresión ajustadas a cada código postal dentro de cada vecindario. Se puede ver que en el modelo de unidades independientes cambian mucho las líneas, sobre todo en los vecindarios en los que hay pocos datos, llegando a haber líneas con pendientes negativas, lo cual no tiene mucho sentido dado el contexto del problema. El modelo nivel muestra pendientes más estables, y sobre todo, en los vecindarios y códigos postales, se mantiene siempre la pendiente positiva.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/no_pooling_obs_vs_pred_train_by_neighborhood_zip_regression_lines.pdf}
+    \caption{Modelo de unidades independientes: Diagramas de dispersión de logaritmo de superficie de terreno contra logaritmo del precio, separados por vecindario. Dentro de cada gráfica de vecindario, se muestran las líneas de regresión de cada código postal.}
+    \label{fig:no_pooling_obs_vs_pred_train_by_neighborhood_zip_regression_lines}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/three_levels_obs_vs_pred_train_by_neighborhood_zip_regression_lines.pdf}
+    \caption{Modelo multinivel: Diagramas de dispersión de logaritmo de superficie de terreno contra logaritmo del precio, separados por vecindario. Dentro de cada gráfica de vecindario, se muestran las líneas de regresión de cada código postal.}
+    \label{fig:three_levels_obs_vs_pred_train_by_neighborhood_zip_regression_lines}
+\end{figure}
+
+
 Para medir el desempeño de los distintos modelos, se pueden usar distintas medidas. En este trabajo, se utilizan tres: el DIC (\textit{Deviance Information Criterion}), la raíz del error cuadrático medio (RMSE) y el error medio absoluto (MAE). Para las tres medidas, es preferible tener un menor valor. En la tabla \ref{tab:dic_rmse_mae} se muestran los valores de estas medidas para cada uno de los modelos. El modelo de unidades iguales es claramente inferior, pues los valores son mucho mayores. Entre el modelo de unidades independientes y el multinivel hay competencia, pues el primero tiene mayor DIC pero menores MAE y RMSE. Sin embargo, las diferencias en MAE y RMSE no son muy grandes; y además, viendo los resultados anteriores, el modelo multinivel es más robusto que el de unidades independientes.
 
 \begin{table}[]
-\centering
-\caption{Valores de DIC, RMSE y MAE de cada modelo.}
-\label{tab:dic_rmse_mae}
-\begin{tabular}{|l|c|c|c|c|c|}
-\hline
-                        &           & \multicolumn{2}{c|}{Entrenamiento} & \multicolumn{2}{c|}{Prueba} \\ \hline
-                        & DIC       & MAE              & RMSE            & MAE          & RMSE         \\ \hline
-Unidades iguales        & 630,996   & 287,374          & 461,166         & 283,847      & 446,443      \\ \hline
-Unidades independientes & 7,239,403 & 188,123          & 315,006         & 190,248      & 324,864      \\ \hline
-Multinivel              & 16,716    & 191,383          & 324,493         & 192,564      & 335,204      \\ \hline
-\end{tabular}
+	\centering
+	\caption{Valores de DIC, RMSE y MAE de cada modelo.}
+	\label{tab:dic_rmse_mae}
+	\begin{tabular}{|l|c|c|c|c|c|}
+	\hline
+	                        &           & \multicolumn{2}{c|}{Entrenamiento} & \multicolumn{2}{c|}{Prueba} \\ \hline
+	                        & DIC       & MAE              & RMSE            & MAE          & RMSE         \\ \hline
+	Unidades iguales        & 630,996   & 287,374          & 461,166         & 283,847      & 446,443      \\ \hline
+	Unidades independientes & 7,239,403 & 188,123          & 315,006         & 190,248      & 324,864      \\ \hline
+	Multinivel              & 16,716    & 191,383          & 324,493         & 192,564      & 335,204      \\ \hline
+	\end{tabular}
 \end{table}
 
 % > readRDS("../out/models/model_comp_pooling.rds")$BUGSoutput$DIC
