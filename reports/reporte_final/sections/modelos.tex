@@ -11,51 +11,26 @@ Se ajustaron tres modelos lineales a los datos: un modelo de unidades iguales, u
 
 El modelo de unidades iguales es simplemente un modelo de regresión lineal con un parámetro fijo para el intercepto y un parámetro fijo para cada uno de los regresores. Sean $y_i$ el logaritmo del precio de la casa $i$ y $x_i$ el logaritmo del número de pies cuadrados en la casa $i$, para $i \in \left\{1, \hdots, n \right\}$, con $n = 22,769$. El modelo de unidades independientes es $y_i \sim \mathrm{N}(\alpha + \beta x_i, \tau_y)$, con distribuciones previas $\alpha \sim \mathrm{N}(0, 0.001)$, $\beta \sim \mathrm{N}(0, 0.001)$ y $\tau_y \sim \mathrm{Ga}(0.001, 0.001)$. %$\alpha \sim \mathrm{N}(\alpha_0, \tau_{\alpha})$, $\beta \sim \mathrm{N}(\beta_0, \tau_{\beta})$ y $\tau_y \sim \mathrm{Ga}(a, b)$
 
-De antemano se tiene conocimiento como para pensar que este modelo no es el más adecuado para los datos, pues se vio en el análisis exploratorio de datos que los precios varían por código postal, por lo que no es muy sensato suponer que no existen relaciones entre las observaciones.
+De antemano se tiene conocimiento como para pensar que este modelo no es el más adecuado para los datos, pues se vio en el análisis exploratorio de datos que los precios varían por código postal, por lo que no es muy sensato suponer que no existen relaciones entre las observaciones. De hecho, en la figura \ref{fig:comp_pooling_resids} se puede ver este efecto. Más adelante se ahonda en este resultado.
 
-De hecho, en la figura \ref{fig:comp_pooling_resids} se puede ver este efecto. En la figura se muestran los residuales del modelo en el eje $y$, y en el eje $x$ se muestra el índice de la observación, donde las observaciones están ordenadas de acuerdo a código postal. Es evidente un patrón, que viene de la correlación entre las observaciones que existe dentro de cada código postal.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/comp_pooling_resids.pdf}
-    \caption{Residuales de modelo de unidades iguales}
-    \label{fig:comp_pooling_resids}
-\end{figure}
-
-En la figura \ref{fig:comp_pooling_obs_vs_pred} se puede ver para cada observación el valor observado contra el valor ajustado. Se aprecia una varianza considerablemente grande y que además en los valores pequeños, el modelo tiende a sobreestimar, mientras que en valores grandes pasa lo contrario.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/comp_pooling_obs_vs_pred.pdf}
-    \caption{Ajustado contra observado en modelo de unidades iguales}
-    \label{fig:comp_pooling_obs_vs_pred}
-\end{figure}
 
 \subsection{Modelo de unidades independientes}
 
-Este es un modelo de interceptos y pendientes cambiantes de acuerdo al código postal, es decir, es de la forma $y_i \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}, \tau_y)$, donde $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son $\alpha[j] \sim \mathrm{N}(0, 0.001)$, $\beta[j] \sim \mathrm{N}(0, 0.001)$ y $\tau_y \sim \mathrm{Ga}(0.001, 0.001)$, para $j = 1, \hdots, J$, con $J = 154$ el número de códigos postales en la ciudad.
+Este es un modelo de interceptos y pendientes cambiantes de acuerdo al código postal, es decir, es de la forma 
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/no_pooling_resids.pdf}
-    \caption{Residuales de modelo de unidades independientes}
-    \label{fig:no_pooling_resids}
-\end{figure}
+\[
+	y_i \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}, \tau_y),
+\]
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/no_pooling_obs_vs_pred.pdf}
-    \caption{Valor ajustado contra observado en modelo de unidades independientes}
-    \label{fig:no_pooling_obs_vs_pred}
-\end{figure}
+donde $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son 
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/no_pooling_param_values.pdf}
-    \caption{Valor e intervalos de probabilidad de parámetros de modelo de unidades independientes}
-    \label{fig:no_pooling_param_values}
-\end{figure}
+\begin{itemize}
+	\item $\alpha[j] \sim \mathrm{N}(0, 0.001)$
+	\item $\beta[j] \sim \mathrm{N}(0, 0.001)$
+	\item $\tau_y \sim \mathrm{Ga}(0.001, 0.001)$
+\end{itemize}
 
+para $j = 1, \hdots, J$, con $J = 154$ el número de códigos postales en la ciudad.
 
 \subsection{Modelo multinivel}
 
@@ -63,87 +38,50 @@ En el modelo multinivel o jerárquico, también ajustamos distintos interceptos 
 
 El modelo ajustado fue de la forma $y_i ~ \sim \mathrm{N}(\alpha_{j[i]} + \beta_{j[i]}, \tau_{j[i]})$, donde nuevamente $j[i]$ se refiere al código postal correspondiente a la $i$-ésima observación. Las distribuciones previas son $\alpha_j \sim \mathrm{N} (\mu_{\alpha, k[j]}, \tau_{\alpha, k[j]})$, $\beta_j \sim \mathrm{N} (\mu_{\beta, k[j]}, \tau_{\beta, k[j]})$ y $\tau_{j[i]} \sim \mathrm{Ga}(\alpha_{y, l[k]}, \beta_{y, l[k]})$, donde $k[j]$ se refiere al vecindario correspondiente al $j$-ésimo código postal, y $l[k]$ se refiere al distrito correspondiente al $k$-ésimo vecindario. Las distribuciones previas de estos hiperparámetros son 
 
-\begin{itemize}
+ \begin{multicols}{3}
+    \begin{itemize}
+		\item $\mu_{\alpha, k[j]} \sim \mathrm{N} (\mu_{\alpha, l[k]}, \tau_{\alpha, l[k]})$
+		\item $\tau_{\alpha, k[j]} \sim \mathrm{exp} (\lambda_{\alpha, l[k]})$
+		\item $\mu_{\beta, k[j]} \sim \mathrm{N} (\mu_{\beta, l[k]}, \tau_{\beta, l[k]})$
+		\item $\tau_{\beta, k[j]} \sim \mathrm{exp} (\lambda_{\beta, l[k]})$
+		\item $\alpha_{y, l[k]} \sim \mathrm{exp} (\lambda_{\alpha_y, l[k]})$	\item $\beta_{y, l[k]} \sim \mathrm{exp} (\lambda_{\beta_y, l[k]}$
+    \end{itemize}
+\end{multicols}
 
-	\item $\mu_{\alpha, k[j]} \sim \mathrm{N} (\mu_{\alpha, l[k]}, \tau_{\alpha, l[k]})$
-
-	\item $\tau_{\alpha, k[j]} \sim \mathrm{exp} (\lambda_{\alpha, l[k]})$
-
-	\item $\mu_{\beta, k[j]} \sim \mathrm{N} (\mu_{\beta, l[k]}, \tau_{\beta, l[k]})$
-
-	\item $\tau_{\beta, k[j]} \sim \mathrm{exp} (\lambda_{\beta, l[k]})$
-
-	\item $\alpha_{y, l[k]} \sim \mathrm{exp} (\lambda_{\alpha_y, l[k]})$
-
-	\item $\beta_{y, l[k]} \sim \mathrm{exp} (\lambda_{\beta_y, l[k]}$
-
-\end{itemize}
 
 Y sus correspondientes hiperparámetros se distribuyen:
 
-\begin{itemize}
+\begin{multicols}{3}
+	\begin{itemize}
 
-	\item $\mu_{\alpha, l[k]} \sim \mathrm{N}(\mu_{\alpha_0})$
-	
-	\item $\tau_{\alpha, l[k]} \sim \mathrm{exp}(\lambda_{\tau_{\alpha_0}})$
-	
-	\item $\lambda_{\alpha, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\alpha_0}})$
-	
-	\item $\mu_{\beta, l[k]} \sim \mathrm{N}(\mu_{\beta_0})$
-	
-	\item $\tau_{\beta, l[k]} \sim \mathrm{exp}(\lambda_{\tau_{\beta_0}})$
-	
-	\item $\lambda_{\beta, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\beta_0}})$
-	
-	\item $\lambda_{\alpha_y, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\alpha_y}})$
-	
-	\item $\lambda_{\beta_y, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\beta_y}})$
-	
+		\item $\mu_{\alpha, l[k]} \sim \mathrm{N}(\mu_{\alpha_0})$	
+		\item $\tau_{\alpha, l[k]} \sim \mathrm{exp}(\lambda_{\tau_{\alpha_0}})$	
+		\item $\lambda_{\alpha, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\alpha_0}})$	
+		\item $\mu_{\beta, l[k]} \sim \mathrm{N}(\mu_{\beta_0})$	
+		\item $\tau_{\beta, l[k]} \sim \mathrm{exp}(\lambda_{\tau_{\beta_0}})$	
+		\item $\lambda_{\beta, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\beta_0}})$	
+		\item $\lambda_{\alpha_y, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\alpha_y}})$	
+		\item $\lambda_{\beta_y, l[k]} \sim \mathrm{exp}(\lambda_{\lambda_{\beta_y}})$	
 
-\end{itemize}
+	\end{itemize}
+\end{multicols}
 
 Con sus correspondientes distribuciones previas:
 
-\begin{itemize}
+\begin{multicols}{3}
+	\begin{itemize}
+		\item $\mu_{\alpha_0} \sim \mathrm{N}(0, 0.0001)$	
+		\item $\lambda_{\tau_{\alpha_0}} \sim \mathrm{exp}(0.01)$	
+		\item $\lambda_{\lambda_{\alpha_0}} \sim \mathrm{exp}(0.01)$	
+		\item $\mu_{\beta_0} \sim \mathrm{N}(0, 0.0001)$	
+		\item $\lambda_{\tau_{\beta_0}} \sim \mathrm{exp}(0.01)$	
+		\item $\lambda_{\lambda_{\beta_0}} \sim \mathrm{exp}(0.01)$	
+		\item $\lambda_{\lambda_{\alpha_y}} \sim \mathrm{exp}(0.01)$	
+		\item $\lambda_{\lambda_{\beta_y}} \sim \mathrm{exp}(0.01)$	
+	\end{itemize}
+\end{multicols}
 
-	\item $\mu_{\alpha_0} \sim \mathrm{N}(0, 0.0001)$
-	
-	\item $\lambda_{\tau_{\alpha_0}} \sim \mathrm{exp}(0.01)$
-	
-	\item $\lambda_{\lambda_{\alpha_0}} \sim \mathrm{exp}(0.01)$
-	
-	\item $\mu_{\beta_0} \sim \mathrm{N}(0, 0.0001)$
-	
-	\item $\lambda_{\tau_{\beta_0}} \sim \mathrm{exp}(0.01)$
-	
-	\item $\lambda_{\lambda_{\beta_0}} \sim \mathrm{exp}(0.01)$
-	
-	\item $\lambda_{\lambda_{\alpha_y}} \sim \mathrm{exp}(0.01)$
-	
-	\item $\lambda_{\lambda_{\beta_y}} \sim \mathrm{exp}(0.01)$
-	
-\end{itemize}
+%Se tienen en total 758 parámetros.
 
-Se tienen en total 759 parámetros
+En la siguiente sección se muestran los resultados de los tres modelos presentados aquí.
 
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/three_levels_resids.pdf}
-    \caption{Residuales de modelo multinivel}
-    \label{fig:three_levels_resids}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/three_levels_obs_vs_pred.pdf}
-    \caption{Valor ajustado contra observado en modelo multinivel}
-    \label{fig:three_levels_obs_vs_pred}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{images/three_levels_param_values.pdf}
-    \caption{Valor e intervalos de probabilidad de parámetros de modelo multinivel}
-    \label{fig:three_levels_param_values}
-\end{figure}
