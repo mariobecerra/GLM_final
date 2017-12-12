@@ -1,0 +1,325 @@
+---
+title: ""
+author: ""
+date: ""
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+options(scipen = 8)
+
+```
+
+# Análisis descriptivo de la información
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(gridExtra)
+library(scales)
+library(stringr)
+theme_set(theme_bw())
+
+nyc_sales <- read_rds("../out/nyc_sales.rds")
+
+```
+
+#Gráficas univariadas
+
+## Precio de venta
+
+La principal variable de interés es el precio en doláres de venta de las casas en Nueva York, a continuación se muestra una gráfica de frecuencias absoluta con y sin la transformación logarítmo:
+
+```{r}
+p1 <- nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(SALE_PRICE)) + labs(x = "Precio de venta", y = "Frecuencia", title = "Frecuencias absolutas\n del precio de venta") 
+
+p2 <- nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(log(SALE_PRICE))) + labs(x = "Logarítmo del precio de venta", y = "Frecuencia", title = "Frecuencias absolutas\n del logarítmo del precio de venta")
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+Como se puede observar, los precios de venta se asemejan a una distribución exponencial o gama pero aplicando la transformación logarítmo, los datos se asemajan a una muestra de una distribución normal, por lo que se usará esta transformación en los modelos posteriores.
+
+##Superfice total
+
+Otra de las variables de interés es la superfice total que esta medida en pies cuadrados, a continuación se muestran las gráficas de frecuencias absolutas para esta variable con y sin transformación logarítmo.
+
+```{r}
+p1 <- nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(GROSS_SQUARE_FEET)) + labs(x = "Superficie total", y = "Frecuencia", title = "Frecuencias absolutas\n de la superficie total")  
+
+p2 <- nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(log(GROSS_SQUARE_FEET))) + labs(x = "Superficie total", y = "Frecuencia", title = "Frecuencias absolutas\n del logarítmo de la superficie total")  
+
+grid.arrange(p1, p2, ncol=2)
+
+```
+De igual manera que el precio de ventas, es más conveniente usar los datos usando la transformación logarítmo pues muestran un comportamiento semejante a una muestra de una distribución normal.
+
+## Superficie
+
+Finalmente, la variable de superfice  en pies cuadrados se muesTra en las siguientes gráficas:
+
+```{r}
+p1 <- nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(LAND_SQUARE_FEET)) + labs(x = "Superficie ", y = "Frecuencia", title = "Frecuencias absolutas\n de la superficie")  
+
+p2 <- nyc_sales %>% 
+  ggplot() + 
+  geom_histogram(aes(log(LAND_SQUARE_FEET))) + labs(x = "Superficie", y = "Frecuencia", title = "Frecuencias absolutas\n del logarítmo de la superficie")  
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+En este caso también es conveniente usar la transformación logarítmo en los datos pues mejora la distribución muestral y reescala los datos a una escala más pequeña.
+
+*Nota:* la superficie total incluye aquella área del terreno que puede ser usada o no mientras que la superficie es aquella área del terreno que puede ser usada
+
+
+# Gráficas bivariadas
+
+Primero observaremos la posible relación entre el precio de venta y la superficie total mediante un diagrama de dispersión.
+
+*Obs:* Las gráficas que se muestran a continuación ya estan en escala logarítma.
+
+
+
+## Precio de venta vs superficie total
+```{r fig.asp = .5}
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5) + labs(x = "Superficie total", y = "Precio de venta", title = "Diagrama de dispersión")
+```
+
+Como se puede observar, existe una tendencia lineal creciente entre las dos variables, es decir, a mayor superficie total también se tiene un mayor precio de venta. Por lo que podemos suponer que la variable de superficie total puede ser usada como variable explicativa en un modelo de regresión.
+
+
+## Precio de venta vs superficie 
+
+La relación entre la superficie y el precio de venta se muestra en el siguiente diagrama de dispersión:
+
+```{r fig.asp = .5}
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(LAND_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5) + labs(x = "Superficie total", y = "Precio de venta", title = "Diagrama de dispersión")
+```
+
+En esta gráfica se puede observar que no visualmente no existe una relación entre estas dos variables pues no muestra alguna tendencia.
+
+
+
+## Superficie total vs superficie 
+
+Asimismo, el siguiente diagrama de dispersión muestra la posible relación entre las covariables superficie y superficie total.
+
+```{r fig.asp = .5}
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE)), size = 0.4, alpha = 0.5)+ labs(x = "Superficie total", y = "Superficie", title = "Diagrama de dispersión")
+
+```
+
+Como es de esperarse, estas dos variables estan relacionadas pues se puede esbozar una relación creciente, es decir, a mayor superficie total se tiene mayor superficie. Dada esta colinealidad, en un modelo de regresión se debería de usar alguna de estas dos variables pues proporcionan la misma información, por las gráficas anteriores se seleccionó la variable de superficie total.
+
+##Precio de venta vs año de construcción
+
+```{r fig.asp = .5}
+nyc_sales %>% 
+  ggplot() +
+  geom_point(aes(YEAR_BUILT, log(SALE_PRICE)), size = 0.4, alpha = 0.5) + labs(x = "Año de construcción", y = "Precio de venta")
+```
+
+En la grafica anterior podemos observar que si bien no existe una relación creciente entre el año de construcción de la casa y su precio de venta, si parece haber cierta heterocedasticidad en los datos pues en los último 50 años no fluctua tanto el precio de venta. 
+
+```{r fig.asp = .5}
+nyc_sales %>% 
+  filter(!is.na(YEAR_BUILT)) %>% 
+  mutate(YEAR_BUILT_CAT = cut(x = YEAR_BUILT, breaks = c(-Inf, 1850, 1900, 1950, 2000, Inf), labels = c("Antes de 1850", "1850-1900", "1900-1950", "1950-2000", "2000- Actualidad"))) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = YEAR_BUILT_CAT, y = log(SALE_PRICE))) + labs(x = "Año de construcción", y = "Precio de venta")
+
+```
+
+Podemos observar que en el hecho de que una casa fuera construida en el siglo pasado no afecta en gran medida la dispersión de los precios de venta, sin embargo se reduce los valores atípicos conforme avanza el tiempo. Es de notar también que las pocas casas que fueron construidas antes de 1850 presentan precios más altos, posiblemente por su valor histórico.
+
+
+
+##Precio de pie cúbico vs año de construcción
+
+Dada la relación que existe entre el precio de venta y superficie total, es de interés saber si considerando estas dos variables cambia la tendencia a lo largo del año de construcción. Para ello consideraremos la siguiente variable
+
+$$\text{Precio x pie cuadrado} = log(\text{Precio de venta}) - log(\text{Superficie total}) = log(\frac{\text{Precio de venta}} {\text{Superficie total}})$$
+
+
+La gráfica de dispersión se muestra a continuación:
+
+```{r fig.asp = 0.5}
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = log(SALE_PRICE/GROSS_SQUARE_FEET)) %>% 
+  ggplot() +
+  geom_point(aes(YEAR_BUILT, PRICE_PER_SQ_FT), size = 0.4, alpha = 0.5) + labs(x = "Año de construcción", y = "Precio x pie cuadrado", title = "Diagrama de dispersión")
+
+```
+
+```{r fig.asp = 0.5}
+
+nyc_sales %>% 
+  filter(!is.na(YEAR_BUILT)) %>% 
+  mutate(YEAR_BUILT_CAT = cut(x = YEAR_BUILT, breaks = c(-Inf, 1850, 1900, 1950, 2000, Inf), labels = c("Antes de 1850", "1850-1900", "1900-1950", "1950-2000", "2000- Actualidad")), 
+         PRICE_PER_SQ_FT = log(SALE_PRICE/GROSS_SQUARE_FEET)) %>% 
+  ggplot() +
+  geom_boxplot(aes(x = YEAR_BUILT_CAT, y = PRICE_PER_SQ_FT)) + labs(x = "Año de construcción", y = "Precio x pie cuadrado", title = "Diagrama de caja y brazos")
+
+```
+ 
+ 
+ Se puede observar que el comportamiento no cambia, existen más valores atípicos a inicios del siglo pasado que al final, por lo que es un indicio de que la varianza en los precios de venta fue disminuyendo.
+ 
+## Precio de venta vs distrito
+
+Es de esperar que el precio de venta cambie dependiendo si la casa esta ubicada en cierto distrito. Para corroborar esta hipótesis se graficó lo siguiente:
+
+```{r fig.asp = 0.5}
+nyc_sales %>% 
+  ggplot() +
+  geom_histogram(aes(x = log(SALE_PRICE), y = ..density..)) +
+  facet_wrap(~Borough) + labs(x = "Precio de venta", y = "Densidad" , title = "Histograma")
+```
+
+En esta primer gráfica se puede esbozar que en efecto cambian las distribuciones muestrales dependiendo el distrito en el que se encuentran las casas, para corroborar lo anterior se gráfico un diagrama de caja y brazos.
+
+
+```{r fig.asp = 0.5}
+nyc_sales %>% 
+  ggplot(aes(x = Borough, y = log(SALE_PRICE))) +
+  geom_boxplot() + 
+  stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                 width = .75, linetype = "dashed") + 
+  labs(x = "Distrito", y = "Precio de venta" , title = "Diagrama de caja y brazos")
+
+```
+ Podemos observar que Manhattan muestra una media más alta que el resto de los distritos(línea punteada), y tambien presenta más variación en los precios de venta. El siguiente distrito con una media más alta es Brooklyn con una variación más grande que el resto de los distritos(sin considerar Manhattan). Se puede concluir que si esta relacionado el precio de venta con el distrito en el que se ubique la casa.
+ 
+## Precio por pie cuadrado vs distrito
+ 
+Se realizó una analísis similar al realizado en la sección anterior pero ahora considerado el precio por pie cuadrado.
+ 
+```{r fig.asp= 0.5}
+
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  ggplot(aes(x = log(PRICE_PER_SQ_FT), y = ..density..)) +
+  geom_histogram() + 
+  facet_wrap(~Borough) + labs(x= "Precio x pie cuadrado" , y = "Densidad", title = "Histograma")
+
+```
+ 
+ 
+```{r fig.asp = 0.5}
+nyc_sales %>% 
+  mutate(PRICE_PER_SQ_FT = SALE_PRICE/GROSS_SQUARE_FEET) %>% 
+  ggplot(aes(x = Borough, y = log(PRICE_PER_SQ_FT))) +
+  geom_boxplot()  + labs(x= "Precio x pie cuadrado" , y = "Densidad", title = "Histograma")
+
+```
+Las conclusiones no cambian respecto a las mostradas en la sección anterior.
+
+## Precio de venta y por pie cuadrado vs tipo de casa
+
+Otra de las hipótesis a corrobar es que el precio de venta de la casa dependiendo el tipo de casa que es. Para ellos se graficó lo siguiente:
+
+```{r fig.asp=0.5}
+nyc_sales %>% 
+  ggplot(aes(BUILDING_CLASS_CATEGORY, log(SALE_PRICE))) +
+  geom_boxplot() + 
+  stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                 width = .75, linetype = "dashed") +
+  labs(x = "Tipo de casa" , y = "Precio de venta") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+```
+
+Se puede observar que en efecto es así, dependiendo la categoria aumenta el promedio del precio de venta(línea punteada). Ahora se realizá el mismo analísis considerar el precio por pie cuadrado
+
+```{r fig.asp = 0.5 }
+nyc_sales %>% 
+  ggplot(aes(BUILDING_CLASS_CATEGORY, log(SALE_PRICE/GROSS_SQUARE_FEET))) +
+  geom_boxplot() + 
+  stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                 width = .75, linetype = "dashed") +
+  labs(x = "Tipo de casa" , y = "Precio por pie cuadrado") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))
+
+```
+
+Considerando el precio por pie cúbico podemos ver que se pierde la relación con el tipo de casa, pues la media no varia mucho entre los tipos de casa ni la variación de los precios.
+
+## Gráficas multivariadas
+
+En esta sección se realizó graficas donde se muestra la relación de distintas variables de interés.
+
+### Precio de venta, superficie total y tipo de casa
+
+La relación de estas variables se esbozó también en la sección anterior mediante la variable precio por pie cuadrado, sin embargo aqui se considerará la relación de manera independiente.
+
+```{r fig.asp = 0.5}
+nyc_sales %>% 
+  mutate(`Tipo de casa` = BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = `Tipo de casa`), 
+             size = 0.9, alpha = 0.7) + labs(x = "Superficie total" , y ="Precio de venta", title ="Diagrama de dispersión") 
+```
+
+Como en las secciones anteriores, se puede observar que en efecto, el precio de las casas dependen en gran medida de estas dos variables.
+
+### Precio de venta, superficie total y distrito.
+
+```{r fig.asp = 0.5}
+nyc_sales %>% 
+  mutate(Distrito = Borough) %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = Distrito), 
+             size = 0.9, alpha = 0.7) + labs(x = "Superficie total" , y ="Precio de venta", title ="Diagrama de dispersión") 
+```
+
+En estas gráficas se puede observar mucho más claro que el precio de venta depende en que distrito se encuentra la casa.
+
+## Precio de venta, superficie total, tipo de casa y distrito
+
+```{r fig.asp = 0.5}
+nyc_sales %>% 
+  mutate(`Tipo de casa` = BUILDING_CLASS_CATEGORY) %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), color = `Tipo de casa`), alpha = 0.6) +
+  facet_wrap(~Borough, scales = 'free') + labs(x = "Superficie total", y = "Precio de venta")
+```
+
+Podemos observar que dentro de cada distrito se mantiene la misma tendencia creciente respecto a la superficie y tipo de cada sin embargo la varianza cambía entre distritos lo que considerar el distrito en el modelo es importante.
+
+
+## Precio de venta, superficie total, tipo de casa, distrito y vecindario.
+
+Hasta este momento se ha omitido la variable vecindario  en el analísis exploratorío, pues geográficamente el nivel más alto es distrito. La grafica que se muestra a continuación muestra la dispersión de los datos si se considera cada vecindario de cada distrito.
+
+
+```{r fig.height=15, fig.width=15}
+nyc_sales %>% 
+  mutate(Neighborhood2 = paste(Borough,"\n", Neighborhood), 
+         `Tipo de casa` = str_wrap(BUILDING_CLASS_CATEGORY, width = 10)) %>% 
+  ggplot() +
+  geom_point(aes(log(GROSS_SQUARE_FEET), log(SALE_PRICE), colour = `Tipo de casa`), alpha = 0.6) +
+  facet_wrap(~Neighborhood2, scales = 'free') + labs(x = "Superficie total" , y = "Precio de venta", title = "Diagrama de dispersión")
+```
+Podemos observar que considerando los vecindarios dentro de cada distrito, en algunos se pieden la relacion creciente, por ejemplo, en el distrito de Queens, los vecindarios Southeast Queens y Rockaways. Sin embargo los datos parecen seguir agrupandose por el tipo de casa que es. Tambien se puede observar que no en todas los vecindarios se encuentran todos los tipos de casas.
+
+
+
+Aún cuando existe otro nivel geográfico, los códigos postales, estos presentan ya un menor número de datos, asi como ya no es posible graficarlo dado el número de códigos postales.
+
