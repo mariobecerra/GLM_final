@@ -50,6 +50,17 @@ En las figuras \ref{fig:comp_pooling_obs_vs_pred}, \ref{fig:no_pooling_obs_vs_pr
     \label{fig:three_levels_obs_vs_pred}
 \end{figure}
 
+En la figura \ref{fig:res_int_pred_three_levels_no_pooling} también se muestran los valores observados contra los ajustados con el modelo multinivel y de unidades independientes en el conjunto de prueba. La diferencia en esta gráfica es que se muestran los intervalos al 95\% de predicción de cada observación. Se puede ver por el tamaño de estos intervalos que se está tomando en cuenta la incertidumbre que hay en la predicción. Esta incertidumbre viene de la varianza original de los datos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.02\textwidth]{images/res_int_pred_three_levels_no_pooling.pdf}
+    \caption{Valor ajustado contra observado del conjunto de prueba en modelo de unidades independientes y modelo multinivel}
+    \label{fig:res_int_pred_three_levels_no_pooling}
+\end{figure}
+
+
+
 En las figuras \ref{fig:no_pooling_param_values} y \ref{fig:three_levels_param_values} se muestran los valores de los parámetros junto con sus intervalos al 95\% de probabilidad del modelo de unidades independientes y del modelo multinivel. En el modelo de unidades independientes hay varios parámetros que tienen una varianza muy grande, y hay incluso algunos códigos postales que tienen un parámetro de pendiente negativo, lo cual intuitivamente no hace mucho sentido, pues eso significaría que a menor tamaño, la casa es más grande; pero recordando el análisis exploratorio, estas estimaciones negativas corresponden a los códigos postales con pocas observaciones en las cuales se podía apreciar una tendencia negativa; pero esto no es nada más que ruido de la muestra pequeña que se tiene. En el modelo multinivel, al tomar fuerzas de los hiperparámetros, no se tienen estimaciones puntuales negativas, y los intervalos de probabilidad son mucho más pequeños; sin embargo, sí se aprecia cambio entre los parámetros; es decir, el modelo está captando las diferencias de precio que existen entre los códigos postales.
 
 \begin{figure}[H]

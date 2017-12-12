@@ -465,7 +465,6 @@ preds_test_comp_pooling %>%
          device = 'pdf', width = 200, height = 260, units = "mm")
 
 
-
 # preds_test_comp_pooling %>% 
 #   mutate(Neighborhood = paste(substr(nyc_test$Borough, 1, 2), nyc_test$Neighborhood),
 #          x = log(nyc_test$GROSS_SQUARE_FEET)) %>% 
@@ -706,10 +705,6 @@ params_zip_no_pooling <- summary_mod_no_pooling %>%
     theme_bw(base_size = 7)) %>% 
   ggsave(., filename = "../out/plots/no_pooling_obs_vs_pred_train_by_neighborhood_zip_regression_lines.pdf", 
          device = 'pdf', width = 216, height = 280, units = "mm")
-
-
-
-
 
 # (summary_mod_no_pooling %>%
 #     as.data.frame() %>%
@@ -1133,6 +1128,34 @@ plot_obs_vs_pred(preds_tdist_three_levels, preds_test_tdist_three_levels) %>%
   ggsave(., 
          file = "../out/plots/tdist_three_levels_param_values.pdf", 
          device = "pdf", width = 150, height = 80, units = "mm")
+
+#########
+# Preds
+#########
+
+grid.arrange(
+  preds_test_no_pooling %>%
+    ggplot(aes(log(obs), mean)) +
+    geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.4, size = 0.2) +
+    geom_point(alpha = 0.4, size = 0.4) +
+    ylim(11, 16.5) +
+    xlab("Logaritmo de precio se venta") +
+    ylab("Valor ajustado") +
+    ggtitle("Modelo de unidades independientes") +
+    geom_abline(slope = 1),
+  preds_test_three_levels %>%
+    ggplot(aes(log(obs), mean)) +
+    geom_errorbar(aes(ymin = X2.5., ymax = X97.5.), alpha = 0.4, size = 0.2) +
+    geom_point(alpha = 0.4, size = 0.4) +
+    ylim(11, 16.5) +
+    ylab("") +
+    xlab("Logaritmo de precio se venta") +
+    ggtitle("Modelo multinivel") +
+    geom_abline(slope = 1),
+  ncol = 2) %>% 
+  ggsave(., 
+         file = "../out/plots/res_int_pred_three_levels_no_pooling.pdf", 
+         device = "pdf", width = 300, height = 150, units = "mm")
 
 ########
 # DICs
