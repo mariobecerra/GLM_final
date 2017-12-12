@@ -126,6 +126,18 @@ En la tabla \ref{tab:dic_rmse_mae} se muestran los valores de estas medidas para
 	\end{tabular}
 \end{table}
 
+
+Finalmente, en la figura \ref{fig:res_map_alpha} se muestra un mapa de los códigos postales de la ciudad de Nueva York. El color de cada polígono corresponde a la estimación puntual del precio de un departamento de 1 pie cuadrado de acuerdo al modelo multinivel. Esta estimación no es nada más que $e^{\alpha_j}$, pues el modelo está planteado de la forma $\log{(\mathrm{precio}_i)} = \alpha_{j[i]} + \beta_{j[i]} \log{(\mathrm{tam}_i)}$, por lo que si el tamaño es de 1 pie cuadrado, como $\log(1) = 0$, entonces $\log{(\mathrm{precio}_i)} = \alpha_{j[i]}$, por lo que $\mathrm{precio}_i = \exp{(\alpha_{j[i]}})$.
+
+En el mapa de arriba de la figura \ref{fig:res_map_alpha} hay algunos espacios blancos, los cuales corresponden a códigos postales sin ventas. Se puede hacer una predicción con base en las distribuciones de las jerarquías que le corresponden, y al hacer esto, se tiene como resultado el mapa de abajo. %Por ejemplo, si el código postal 01025 no tiene datos para una predicción, entonces, suponiendo que este código postal esté en el vecindario de Upper Manhattan, una estimación de 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/res_map_alpha.pdf}
+    \caption{Mapa de códigos postales de la ciudad de Nueva York con su estimación puntual de precio por pie cuadrado con el modelo multinivel}
+    \label{fig:res_map_alpha}
+\end{figure}
+
 % > readRDS("../out/models/model_comp_pooling.rds")$BUGSoutput$DIC
 % [1] 630996.6
 % > readRDS("../out/models/model_no_pooling.rds")$BUGSoutput$DIC

@@ -1208,21 +1208,112 @@ alphas_zips <- summary_mod_three_levels %>%
   filter(!grepl("yf", rowname)) %>% 
   filter(grepl("alpha[", rowname, fixed = T)) %>% 
   set_names(make.names(names(.))) %>% 
-  mutate(zip_code_int = 1:nrow(.)) %>% 
+  mutate(zip_code_int = as.integer(stringi::stri_extract_all(rowname, regex = "[0-9]+"))) %>% 
   left_join(
     nyc_sales %>% 
-      select(ZIPCODE = zip_code, zip_code_int) %>% 
+      select(ZIPCODE = zip_code, zip_code_int, borough_int, neighborhood_int) %>% 
       unique(.)
     )
 
-nyc_zip_tibble %>% 
+means_neighborhoods <- summary_mod_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  filter(grepl("mu.a[", rowname, fixed = T)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(neighborhood_int = as.integer(stringi::stri_extract_all(rowname, regex = "[0-9]+"))) %>% 
+  left_join(
+    nyc_sales %>% 
+      select(borough_int, neighborhood_int) %>% 
+      unique(.)
+  )
+
+means_boroughs <- summary_mod_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  filter(grepl("mu.a.1[", rowname, fixed = T)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(borough_int = stringi::stri_extract_all(rowname, regex = "1\\[[0-9]+")) %>% 
+  mutate(borough_int = as.integer(stringi::stri_replace_all(borough_int, fixed = "1[", replacement = ""))) %>% 
+  left_join(
+    nyc_sales %>% 
+      select(borough_int, Borough) %>% 
+      unique(.)
+  )
+
+missing_zips <- nyc_zip_tibble %>% 
   left_join(alphas_zips) %>% 
-  ggplot()+
-  geom_polygon(aes(x = long, y = lat, group = group, fill = mean),
-            color = 'black', size = 0.1) +
-  coord_fixed() +
-  theme_bw()
+  select(zip_code_int, ZIPCODE, mean, COUNTY) %>% 
+  unique() %>% 
+  mutate(COUNTY = as.character(COUNTY)) %>% 
+  rename(zip_code = ZIPCODE) %>% 
+  left_join(nyc_zip_neighborhoods) %>% 
+  mutate(Borough = ifelse(is.na(Borough), COUNTY, Borough)) %>% 
+  select(-COUNTY, -mean) %>% 
+  filter(Borough != "New York" &
+           Borough != "Kings") %>% 
+  filter(is.na(zip_code_int)) %>% 
+  rename(Borough2 = Borough) %>% 
+  left_join(nyc_sales %>% 
+              select(borough_int, Neighborhood, neighborhood_int) %>% 
+              unique()) %>% 
+  rename(Neighborhood2 = Neighborhood,
+         Borough = Borough2,
+         borough_int2 = borough_int) %>% 
+  left_join(nyc_sales %>% 
+              select(borough_int, Borough) %>% 
+              unique()) %>% 
+  select(-zip_code_int, -borough_int2)
+
+means_missing_zips <- missing_zips %>% 
+  left_join(means_neighborhoods %>% 
+              select(neighborhood_int, mean_neigh = mean)) %>% 
+  left_join(means_boroughs %>% 
+              select(borough_int, mean_borough = mean)) %>% 
+  mutate(mean = ifelse(is.na(mean_neigh), mean_borough, mean_neigh))
+  
+means_all_zips <- means_missing_zips %>% 
+  select(ZIPCODE = zip_code, mean) %>% 
+  bind_rows(
+    alphas_zips %>% 
+      select(ZIPCODE, mean)
+  )
 
 
+grid.arrange(  
+  nyc_zip_tibble %>% 
+    left_join(alphas_zips) %>% 
+    mutate(Precio = exp(mean)) %>% 
+    ggplot() +
+    geom_polygon(aes(x = long, y = lat, group = group, fill = Precio),
+                 color = 'black', size = 0.01) +
+    xlab("") +
+    ylab("") +
+    scale_fill_continuous(
+      low = "grey", 
+      high = "black",
+      guide="colorbar", 
+      na.value="white") +
+    coord_fixed(),
+  nyc_zip_tibble %>% 
+    left_join(means_all_zips) %>% 
+    mutate(Precio = exp(mean)) %>% 
+    ggplot()+
+    geom_polygon(aes(x = long, y = lat, group = group, fill = Precio),
+                 color = 'black', size = 0.01) +
+    xlab("") +
+    ylab("") +
+    scale_fill_continuous(
+      low = "grey", 
+      high = "black",
+      guide="colorbar", 
+      na.value="white") +
+    coord_fixed(),
+  nrow = 2) %>% 
+  ggsave(.,
+         file = "../out/plots/res_map_alpha.pdf",
+         device = "pdf", width = 180, height = 220, units = "mm")
 
 
+  
