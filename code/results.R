@@ -1016,3 +1016,53 @@ gc()
 # [1] 16716.46
 
 
+########
+## Maps
+#######
+
+library(rgdal)
+library(maptools)
+library(gpclib)
+gpclibPermit() 
+
+
+nyc_zip_shape <- readOGR("../data/ignore/ZIP_CODE_040114/", layer = "ZIP_CODE_040114") %>% 
+  spTransform(CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+
+nyc_zip_shape@data$id <- as.character(1:nrow(nyc_zip_shape@data))
+
+nyc_zip_tibble <- fortify(nyc_zip_shape, region = "id") %>% 
+  as_tibble() %>% 
+  left_join(nyc_zip_shape@data)
+
+nyc_zip_tibble %>% 
+  ggplot()+
+  geom_path(aes(x = long, y = lat, group = group),
+            color = 'black', size = 0.1) +
+  coord_fixed() +
+  theme_bw()
+
+alphas_zips <- summary_mod_three_levels %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  filter(!grepl("yf", rowname)) %>% 
+  filter(grepl("alpha[", rowname, fixed = T)) %>% 
+  set_names(make.names(names(.))) %>% 
+  mutate(zip_code_int = 1:nrow(.)) %>% 
+  left_join(
+    nyc_sales %>% 
+      select(ZIPCODE = zip_code, zip_code_int) %>% 
+      unique(.)
+    )
+
+nyc_zip_tibble %>% 
+  left_join(alphas_zips) %>% 
+  ggplot()+
+  geom_polygon(aes(x = long, y = lat, group = group, fill = mean),
+            color = 'black', size = 0.1) +
+  coord_fixed() +
+  theme_bw()
+
+
+
+
