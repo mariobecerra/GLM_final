@@ -83,7 +83,23 @@ Para observar el efecto de las diferencias en los parámetros, en las figuras \r
 \end{figure}
 
 
-Para medir el desempeño de los distintos modelos, se pueden usar distintas medidas. En este trabajo, se utilizan tres: el DIC (\textit{Deviance Information Criterion}), la raíz del error cuadrático medio (RMSE) y el error medio absoluto (MAE). Para las tres medidas, es preferible tener un menor valor. En la tabla \ref{tab:dic_rmse_mae} se muestran los valores de estas medidas para cada uno de los modelos. El modelo de unidades iguales es claramente inferior, pues los valores son mucho mayores. Entre el modelo de unidades independientes y el multinivel hay competencia, pues el primero tiene mayor DIC pero menores MAE y RMSE. Sin embargo, las diferencias en MAE y RMSE no son muy grandes; y además, viendo los resultados anteriores, el modelo multinivel es más robusto que el de unidades independientes.
+Para medir el desempeño de los distintos modelos, se pueden usar distintas medidas. En este trabajo, se utilizan tres: el DIC (\textit{Deviance Information Criterion}), la raíz del error cuadrático medio (RMSE) y el error medio absoluto (MAE). Dada su definición, para las tres medidas, es preferible tener un menor valor. Sean $y_i$ los valores observados y $\hat{y_i}$ las estimaciones puntuales para cada $i \in \left\{ 1, \hdots, n \right\}$, donde $n$ es el número total de observaciones. Las cantidades antes mencionadas están definidas como
+
+\[
+	\mathrm{RMSE} = \sqrt{ \frac{1}{n} \sum_{i = 1}^n \left( y_i - \hat{y_i} \right)^2 }
+\]
+
+\[
+	\mathrm{MAE} = \frac{1}{n} \sum_{i = 1}^n \left| y_i - \hat{y_i} \right|
+\]
+
+\[
+	\mathrm{DIC} = -2 \log{p(y | \theta)} + 2 \log{h(y)},
+\]
+
+donde $p(y | \theta)$ es la función de verosimilitud y $h(y)$ es una función de estandarización de los datos.
+
+En la tabla \ref{tab:dic_rmse_mae} se muestran los valores de estas medidas para cada uno de los modelos. El modelo de unidades iguales es claramente inferior, pues los valores son mucho mayores. Entre el modelo de unidades independientes y el multinivel hay competencia, pues el primero tiene mayor DIC pero menores MAE y RMSE. Sin embargo, las diferencias en MAE y RMSE no son muy grandes; y además, viendo los resultados anteriores, el modelo multinivel es más robusto que el de unidades independientes.
 
 \begin{table}[]
 	\centering
